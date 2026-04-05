@@ -331,7 +331,6 @@ function App() {
             >
               👤 {user.name} {user.role && <span style={{ opacity: 0.7, fontSize: '0.85em' }}>({user.role.display_name})</span>}
             </button>
-            </button>
 
             <button onClick={handleLogout} className="btn btn--sm btn--ghost">
               Sair
