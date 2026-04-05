@@ -7,21 +7,27 @@ Este documento apresenta um plano de evolução para o projeto, identificando me
 
 ## 🔴 Problemas Críticos (Corrigir Imediatamente)
 
-### 1. Imagens no Editor
+### 1. Performance do Frontend
+- **Status**: Site demora para carregar
+- **Causa**: 
+  - Todos os componentes carregam juntos (monolítico)
+  - Sem lazy loading
+  - Múltiplas requisições simultâneas sem cache
+- **Solução**: 
+  - Implementar lazy loading com React.lazy
+  - Adicionar memoização
+  - Otimizar re-renders
+
+### 2. Imagens no Editor
 - **Status**: Não estão alinhando corretamente ao texto
 - **Causa**: CSS não está fazendo o float correto após sanitização
-- **Solução**: Revisar CSS das imagens no editor e garantir que os atributos de alinhamento sejam preservados
-
-### 2. Busca/Global
-- **Status**: Não está funcionando corretamente
-- **Causa**: Possível problema no endpoint ou no frontend
-- **Solução**: Depurar o SearchController e o componente SearchBar
+- **Solução**: Revisar CSS das imagens no editor
 
 ---
 
 ## 🟡 Melhorias de Qualidade de Código
 
-### 1. Refatorar App.jsx (411 linhas)
+### 1. Refatorar App.jsx (412 linhas)
 **Problema**: Monolítico com 20+ estados e 15+ handlers
 **Proposta**: 
 - Implementar React Router para navegação
@@ -34,7 +40,6 @@ Este documento apresenta um plano de evolução para o projeto, identificando me
 
 ### 3. Padronizar Mensagens de Erro
 - Mistura de português/inglês nos endpoints
--统一izar para português (ou inglês)的一致性
 
 ---
 
@@ -44,9 +49,8 @@ Este documento apresenta um plano de evolução para o projeto, identificando me
 - [ ] Reply a comentários (aninhados)
 - [ ] Editar próprio comentário
 - [ ] Deletar próprio comentário
-- [ ]法定 Reactions (like, love, etc)
 
-### 2. Sistema de Moderation
+### 2. Sistema de Moderação
 - [ ] Report de conteúdo
 - [ ] Pin de tópico (apenas moderadores)
 - [ ] Close/Travamento de tópico
@@ -54,13 +58,7 @@ Este documento apresenta um plano de evolução para o projeto, identificando me
 ### 3. Gamificação Expandida
 - [ ] Desafios semanais/mensais
 - [ ] Sistema de níveis visuais no perfil
-- [ ] Conquitas por categoria (leitura, discussão, etc)
-
-### 4. Frontend Improvements
-- [ ] Implementar TypeScript
-- [ ] Adicionar Error Boundaries
-- [ ] Lazy loading de componentes
-- [ ] Melhorar Mobile UX
+- [ ] Conquistas por categoria
 
 ---
 
@@ -68,52 +66,47 @@ Este documento apresenta um plano de evolução para o projeto, identificando me
 
 ### 1. Autenticação
 - [ ] Rate limiting no login
-- [ ] Melhorar mensagens de erro (não revelar email vs senha)
-- [ ] tokens de acesso mais curtos
+- [ ] Melhorar mensagens de erro
 
 ### 2. Proteções
-- [ ] CSRF em endpoints que precisam (se necessário)
-- [ ] sanitização server-side de conteúdo
+- [ ] Sanitização server-side de conteúdo
 - [ ] Limite de tamanho de upload
 
 ---
 
-## 🟣 Arquitetura
+## 🚀 Plano de Execução - Performance
 
-### Curto Prazo (1-2 meses)
-1. Corrigir bugs críticos (imagens, busca)
-2. Limpeza de código (App.jsx, duplicatas)
-3. Adicionar TypeScript gradualmente
+### Fase 1: Otimizações Imediatas (Agora)
+- [x] Sistema de solicitações de cadastro ✅
+- [ ] Lazy loading dos componentes principais
+- [ ] Memoização de componentes pesados
+- [ ] Otimizar carregamento inicial
 
-### Médio Prazo (3-6 meses)
-1. Implementar React Router
-2. Expandir sistema de comments
-3. Melhorias de gamificação
+### Fase 2: Refatoração (Próximas semanas)
+- [ ] React Router para navegação
+- [ ] Separar App.jsx em componentes menores
+- [ ] Limpar componentes duplicados
 
-### Longo Prazo (6-12 meses)
-1. PWA para mobile
-2. Notificações push (Service Workers)
-3. Moderação avançada
+### Fase 3: Novas Funcionalidades
+- [ ] Sistema de replies em comentários
+- [ ] Sistema de moderação
+- [ ] Gamificação avançada
 
 ---
 
-## 📋 Tarefas de Limpeza (Feitas)
+## 📋 Tarefas Concluídas
 
-- [x] Remover SearchService.php (duplicado)
-- [x] Remover ExampleTest.php (placeholder)
-- [x] Corrigir usuários endpoint (auth)
-- [x]统一izar resposta TopicController
+- [x] Sistema de solicitações de cadastro com aprovação admin
+- [x] Seeders com 4 cargos padrão
+- [x] UI/UX melhorada para visualização de permissões
+- [x] Correções no fluxo de roles (many-to-many)
+- [x] Reset showAdmin no logout
 
 ---
 
 ## Notas
 
 O projeto está em estado funcional com 109 testes passando. A base é sólida, mas precisa de:
-1. Refatoração do frontend (App.jsx)
-2. Correção dos bugs de imagem/busca
+1. Otimização de performance
+2. Refatoração do frontend (App.jsx)
 3. Limpeza de código duplicado
-
-O roadmap deve priorizar:
-1. Correção dos bugs críticos
-2. Refatoração para manutenção
-3. Novas funcionalidades de interação

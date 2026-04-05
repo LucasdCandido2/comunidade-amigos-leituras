@@ -9,7 +9,9 @@ const api = axios.create({
     }
 });
 
-// Interceptor: injeta Bearer token automaticamente em todas as requisições
+const requestCache = new Map();
+const CACHE_DURATION = 30000;
+
 api.interceptors.request.use((config) => {
     const token = localStorage.getItem('token');
     if (token) {
@@ -20,16 +22,43 @@ api.interceptors.request.use((config) => {
     return Promise.reject(error);
 });
 
-// Interceptor de resposta: trata erros de autenticação globalmente
 api.interceptors.response.use(
     (response) => response,
     (error) => {
         if (error.response?.status === 401) {
-            // Token inválido ou expirado — limpar localStorage
             localStorage.removeItem('token');
         }
         return Promise.reject(error);
     }
 );
 
-export default api;
+const cacheKey = (config) => {
+    return `${config.method}:${config.url}:${JSON.stringify(config.params || {})}`;
+};
+
+const getCachedResponse = (key) => {
+    const cached = requestCache.get(key);
+    if (cached && Date.now() - cached.timestamp < CACHE_DURATION) {
+        return cached.response;
+    }
+    requestCache.delete(key);
+    return null;
+};
+
+const setCacheResponse = (key, response) => {
+    requestCache.set(key, { response, timestamp: Date.now() });
+};
+
+export const clearApiCache = () => {
+    requestCache.clear();
+};
+
+export const invalidateCache = (pattern) => {
+    for (const key of requestCache.keys()) {
+        if (key.includes(pattern)) {
+            requestCache.delete(key);
+        }
+    }
+};
+
+export default api;

@@ -1,7 +1,11 @@
-import React from 'react';
+import React, { useMemo } from 'react';
 import { truncateHtml } from '../utils/sanitize';
 
-export function TopicsList({ topics, user, onViewTopic }) {
+export const TopicsList = React.memo(function TopicsList({ topics, user, onViewTopic }) {
+  const sortedTopics = useMemo(() => {
+    return [...topics].sort((a, b) => new Date(b.created_at) - new Date(a.created_at));
+  }, [topics]);
+
   if (topics.length === 0) {
     return (
       <div className="topics-list-empty">
@@ -14,7 +18,7 @@ export function TopicsList({ topics, user, onViewTopic }) {
 
   return (
     <div className="topics-list">
-      {topics.map((topic) => (
+      {sortedTopics.map((topic) => (
         <div
           key={topic.id}
           className={`topics-list__item ${topic.user_id === user.id ? 'topics-list__item--own' : ''}`}
