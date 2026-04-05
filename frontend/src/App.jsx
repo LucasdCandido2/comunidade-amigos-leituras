@@ -5,17 +5,16 @@ import { SearchBar } from './components/SearchBar';
 import { TopicsList } from './components/TopicsList';
 import { topicService } from './services/topicService';
 import { authService } from './services/authService';
-
-const Login = lazy(() => import('./components/Login'));
-const Register = lazy(() => import('./components/Register'));
-const Home = lazy(() => import('./components/Home'));
-const TopicDetail = lazy(() => import('./components/TopicDetail'));
-const WorksRanking = lazy(() => import('./components/WorksRanking'));
-const WorkEditor = lazy(() => import('./components/WorkEditor'));
-const UserProfile = lazy(() => import('./components/UserProfile'));
-const WikiSources = lazy(() => import('./components/WikiSources'));
-const CreateTopic = lazy(() => import('./components/CreateTopic'));
-const RoleManagement = lazy(() => import('./components/RoleManagement'));
+import { Login } from './components/Login';
+import { Register } from './components/Register';
+import { Home } from './components/Home';
+import { TopicDetail } from './components/TopicDetail';
+import { WorksRanking } from './components/WorksRanking';
+import { WorkEditor } from './components/WorkEditor';
+import { UserProfile } from './components/UserProfile';
+import { WikiSources } from './components/WikiSources';
+import { CreateTopic } from './components/CreateTopic';
+import { RoleManagement } from './components/RoleManagement';
 
 const ViewState = {
   HOME: 'home',
@@ -83,7 +82,8 @@ function useAppViewModel() {
   const loadTopics = useCallback(async () => {
     try {
       const response = await topicService.getAll();
-      setTopics(Array.isArray(response.data) ? response.data : []);
+      const topicsData = Array.isArray(response.data) ? response.data : (response.data?.data || []);
+      setTopics(topicsData);
     } catch (error) {
       console.error('Erro ao carregar tópicos:', error);
       setTopics([]);
@@ -171,25 +171,23 @@ function App() {
           </div>
         </nav>
         <div style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: 'var(--space-8)' }}>
-          <Suspense fallback={<LoadingFallback />}>
-            {showRegister ? (
-              <>
-                <Register onRegister={() => { setShowRegister(false); checkUser(); }} />
-                <p style={{ marginTop: 'var(--space-4)', color: 'var(--color-text-secondary)', fontSize: 'var(--text-sm)' }}>
-                  Já tem conta?{' '}
-                  <button style={{ color: 'var(--color-primary)', background: 'none', border: 'none', cursor: 'pointer', fontWeight: 'var(--font-medium)', padding: 0 }} onClick={() => setShowRegister(false)}>Entrar</button>
-                </p>
-              </>
-            ) : (
-              <>
-                <Login onLogin={checkUser} />
-                <p style={{ marginTop: 'var(--space-4)', color: 'var(--color-text-secondary)', fontSize: 'var(--text-sm)' }}>
-                  Não tem conta?{' '}
-                  <button style={{ color: 'var(--color-primary)', background: 'none', border: 'none', cursor: 'pointer', fontWeight: 'var(--font-medium)', padding: 0 }} onClick={() => setShowRegister(true)}>Registrar</button>
-                </p>
-              </>
-            )}
-          </Suspense>
+          {showRegister ? (
+            <>
+              <Register onRegister={() => { setShowRegister(false); checkUser(); }} />
+              <p style={{ marginTop: 'var(--space-4)', color: 'var(--color-text-secondary)', fontSize: 'var(--text-sm)' }}>
+                Já tem conta?{' '}
+                <button style={{ color: 'var(--color-primary)', background: 'none', border: 'none', cursor: 'pointer', fontWeight: 'var(--font-medium)', padding: 0 }} onClick={() => setShowRegister(false)}>Entrar</button>
+              </p>
+            </>
+          ) : (
+            <>
+              <Login onLogin={checkUser} />
+              <p style={{ marginTop: 'var(--space-4)', color: 'var(--color-text-secondary)', fontSize: 'var(--text-sm)' }}>
+                Não tem conta?{' '}
+                <button style={{ color: 'var(--color-primary)', background: 'none', border: 'none', cursor: 'pointer', fontWeight: 'var(--font-medium)', padding: 0 }} onClick={() => setShowRegister(true)}>Registrar</button>
+              </p>
+            </>
+          )}
         </div>
       </div>
     );
@@ -198,26 +196,24 @@ function App() {
   const renderContent = () => {
     if (selectedTopicId) {
       return (
-        <Suspense fallback={<LoadingFallback />}>
-          <TopicDetail topicId={selectedTopicId} user={user} onBack={() => navigate(ViewState.HOME)} onTopicDeleted={handleTopicDeleted} />
-        </Suspense>
+        <TopicDetail topicId={selectedTopicId} user={user} onBack={() => navigate(ViewState.HOME)} onTopicDeleted={handleTopicDeleted} />
       );
     }
 
     switch (currentView) {
       case ViewState.RANKING:
-        return <Suspense fallback={<LoadingFallback />}><WorksRanking onBack={() => navigate(ViewState.HOME)} /></Suspense>;
+        return <WorksRanking onBack={() => navigate(ViewState.HOME)} />;
       case ViewState.WORKS:
-        return <Suspense fallback={<LoadingFallback />}><WorkEditor onWorkSaved={handleWorkSaved} onCancel={() => navigate(ViewState.HOME)} /></Suspense>;
+        return <WorkEditor onWorkSaved={handleWorkSaved} onCancel={() => navigate(ViewState.HOME)} />;
       case ViewState.PROFILE:
-        return <Suspense fallback={<LoadingFallback />}><UserProfile user={user} onViewTopic={(id) => navigate(ViewState.TOPIC, { topicId: id })} onBack={() => navigate(ViewState.HOME)} /></Suspense>;
+        return <UserProfile user={user} onViewTopic={(id) => navigate(ViewState.TOPIC, { topicId: id })} onBack={() => navigate(ViewState.HOME)} />;
       case ViewState.WIKI:
-        return <Suspense fallback={<LoadingFallback />}><WikiSources /></Suspense>;
+        return <WikiSources />;
       case ViewState.ADMIN:
-        return <Suspense fallback={<LoadingFallback />}><RoleManagement onBack={() => navigate(ViewState.HOME)} user={user} /></Suspense>;
+        return <RoleManagement onBack={() => navigate(ViewState.HOME)} user={user} />;
       default:
         return (
-          <Suspense fallback={<LoadingFallback />}>
+          <>
             <Home user={user} onViewTopic={(id) => navigate(ViewState.TOPIC, { topicId: id })} onShowRanking={() => navigate(ViewState.RANKING)} onShowWorks={() => navigate(ViewState.WORKS)} onNewTopic={() => createTopicRef.current?.focus()} />
             <div style={{ marginTop: 'var(--space-8)' }}>
               <CreateTopic ref={createTopicRef} onTopicCreated={handleTopicCreated} />
@@ -228,7 +224,7 @@ function App() {
               </div>
               <TopicsList topics={topics} user={user} onViewTopic={(id) => navigate(ViewState.TOPIC, { topicId: id })} />
             </div>
-          </Suspense>
+          </>
         );
     }
   };

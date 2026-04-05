@@ -1,13 +1,12 @@
-import React, { Suspense, lazy } from 'react'
+import React, { Suspense } from 'react'
 import ReactDOM from 'react-dom/client'
 import { ThemeProvider } from './contexts/ThemeContext.jsx'
+import App from './App.jsx'
 import './index.css'
-
-const App = lazy(() => import('./App.jsx'))
 
 const LoadingFallback = () => (
   <div style={{ 
-    minHeight: '100vh', 
+    minHeight: '100svh', 
     display: 'flex', 
     alignItems: 'center', 
     justifyContent: 'center',
