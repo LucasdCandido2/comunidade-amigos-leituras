@@ -13,6 +13,7 @@ use App\Http\Controllers\Api\WorkController;
 use App\Http\Controllers\Api\ExternalSourceController;
 use App\Http\Controllers\Api\PdfController;
 use App\Http\Controllers\Api\RoleController;
+use App\Http\Controllers\Api\UserController;
 
 Route::post('/register', [AuthController::class, 'register']);
 Route::post('/login', [AuthController::class, 'login']);
@@ -66,6 +67,13 @@ Route::middleware('bearer')->group(function () {
     Route::get('/permissions', [RoleController::class, 'permissions']);
     Route::post('/roles/{id}/assign-user', [RoleController::class, 'assignUser']);
     Route::delete('/roles/{roleId}/users/{userId}', [RoleController::class, 'removeUser']);
+    
+    // Usuários (Admin)
+    Route::get('/users', [UserController::class, 'index']);
+    Route::get('/users/{id}', [UserController::class, 'show']);
+    Route::put('/users/{id}/role', [UserController::class, 'updateRole']);
+    Route::post('/users/assign-role', [UserController::class, 'assignRole']);
+    Route::get('/users/roles', [UserController::class, 'listRoles']);
     
     Route::post('/logout', [AuthController::class, 'logout']);
 });

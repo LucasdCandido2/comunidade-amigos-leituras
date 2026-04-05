@@ -2824,6 +2824,139 @@ select.form-control { cursor: pointer; }
 }
 
 /* ----------------------------------------------------------------
+   ADMIN PANEL
+   ---------------------------------------------------------------- */
+.admin-panel {
+  max-width: var(--container-lg);
+  margin: 0 auto;
+}
+
+.admin-panel__header {
+  display: flex;
+  align-items: center;
+  gap: var(--space-4);
+  margin-bottom: var(--space-6);
+}
+
+.admin-panel__header h2 {
+  margin: 0;
+}
+
+.admin-panel__tabs {
+  display: flex;
+  gap: var(--space-2);
+  margin-bottom: var(--space-6);
+  border-bottom: 1px solid var(--color-border);
+}
+
+.admin-panel__tab {
+  padding: var(--space-3) var(--space-4);
+  background: none;
+  border: none;
+  color: var(--color-text-secondary);
+  cursor: pointer;
+  font-size: var(--text-sm);
+  font-weight: var(--font-medium);
+  border-bottom: 2px solid transparent;
+  margin-bottom: -1px;
+  transition: all var(--duration-base) var(--ease-default);
+}
+
+.admin-panel__tab:hover {
+  color: var(--color-text-primary);
+}
+
+.admin-panel__tab--active {
+  color: var(--color-primary);
+  border-bottom-color: var(--color-primary);
+}
+
+.admin-panel__content {
+  background: var(--color-bg-elevated);
+  border-radius: var(--radius-lg);
+  padding: var(--space-6);
+  border: 1px solid var(--color-border);
+}
+
+.admin-panel__section-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: var(--space-4);
+}
+
+.admin-panel__section-header h3 {
+  margin: 0;
+}
+
+.admin-panel__form {
+  background: var(--color-bg);
+  border-radius: var(--radius-md);
+  padding: var(--space-4);
+  margin-bottom: var(--space-4);
+  border: 1px solid var(--color-border);
+}
+
+.admin-panel__form h4 {
+  margin: 0 0 var(--space-4);
+}
+
+.admin-panel__permissions {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+  gap: var(--space-2);
+}
+
+.admin-panel__list {
+  display: grid;
+  gap: var(--space-4);
+}
+
+.admin-panel__users-table {
+  overflow-x: auto;
+}
+
+.admin-panel__users-table table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.admin-panel__users-table th,
+.admin-panel__users-table td {
+  padding: var(--space-3);
+  text-align: left;
+  border-bottom: 1px solid var(--color-border);
+}
+
+.admin-panel__users-table th {
+  font-weight: var(--font-medium);
+  color: var(--color-text-secondary);
+  font-size: var(--text-sm);
+}
+
+.user-permissions {
+  display: flex;
+  gap: var(--space-1);
+  flex-wrap: wrap;
+}
+
+/* Badge variants */
+.badge--owner {
+  background: var(--color-primary);
+  color: var(--color-text-on-accent);
+}
+
+.badge--moderator {
+  background: var(--color-warning);
+  color: var(--color-text-primary);
+}
+
+.badge--member {
+  background: var(--color-bg-sunken);
+  color: var(--color-text-secondary);
+}
+
+/* ----------------------------------------------------------------
    RESPONSIVIDADE
    ---------------------------------------------------------------- */
 @media (max-width: 768px) {
