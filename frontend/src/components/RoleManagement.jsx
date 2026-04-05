@@ -1,6 +1,18 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import api from '../services/api';
 import { roleService } from '../services/roleService';
+import { registrationRequestService } from '../services/registrationRequestService';
+
+const PERMISSION_GROUPS = {
+  'Usuários': ['view_users', 'create_user', 'edit_user', 'delete_user', 'invite_user'],
+  'Tópicos': ['view_topics', 'create_topic', 'edit_own_topic', 'edit_any_topic', 'delete_own_topic', 'delete_any_topic', 'pin_topic', 'lock_topic'],
+  'Comentários': ['create_interaction', 'edit_own_interaction', 'edit_any_interaction', 'delete_own_interaction', 'delete_any_interaction'],
+  'Biblioteca': ['view_works', 'suggest_work', 'approve_work', 'edit_work', 'delete_work'],
+  'Arquivos': ['upload_asset', 'download_asset', 'delete_own_asset', 'delete_any_asset'],
+  'Moderação': ['moderate_content', 'ban_user', 'shadow_ban_user'],
+  'Sistema': ['view_settings', 'edit_settings', 'manage_roles', 'view_logs'],
+  'Relatórios': ['view_reports', 'export_data'],
+};
 
 export function RoleManagement({ onBack, user }) {
   const [activeTab, setActiveTab] = useState('roles');
@@ -20,6 +32,12 @@ export function RoleManagement({ onBack, user }) {
     user_id: '',
     role_id: '',
   });
+  const [registrationRequests, setRegistrationRequests] = useState([]);
+  const [approveData, setApproveData] = useState({
+    requestId: null,
+    role_id: '',
+  });
+  const [showApproveModal, setShowApproveModal] = useState(false);
   const [error, setError] = useState(null);
   const [success, setSuccess] = useState(null);
 
@@ -29,19 +47,50 @@ export function RoleManagement({ onBack, user }) {
 
   const loadData = async () => {
     try {
-      const [rolesRes, permsRes, usersRes] = await Promise.all([
+      const [rolesRes, permsRes, usersRes, requestsRes] = await Promise.all([
         roleService.getAll(),
         roleService.getPermissions(),
         api.get('/users'),
+        canManageRoles ? registrationRequestService.getAll() : Promise.resolve({ data: [] }),
       ]);
       setRoles(rolesRes.data.data || rolesRes.data);
       setPermissions(permsRes.data);
       setUsers(usersRes.data.data || usersRes.data);
+      setRegistrationRequests(requestsRes.data.data || requestsRes.data);
     } catch (err) {
       setError('Erro ao carregar dados');
     } finally {
       setLoading(false);
     }
+  };
+
+  const handleApprove = async (requestId) => {
+    try {
+      await registrationRequestService.approve(requestId, approveData.role_id || null);
+      setSuccess('Usuário aprovado com sucesso');
+      setShowApproveModal(false);
+      setApproveData({ requestId: null, role_id: '' });
+      loadData();
+    } catch (err) {
+      setError(err.response?.data?.message || 'Erro ao aprovar usuário');
+    }
+  };
+
+  const handleReject = async (requestId) => {
+    if (!confirm('Tem certeza que deseja rejeitar esta solicitação?')) return;
+    
+    try {
+      await registrationRequestService.reject(requestId);
+      setSuccess('Solicitação rejeitada');
+      loadData();
+    } catch (err) {
+      setError(err.response?.data?.message || 'Erro ao rejeitar solicitação');
+    }
+  };
+
+  const openApproveModal = (requestId) => {
+    setApproveData({ requestId, role_id: '' });
+    setShowApproveModal(true);
   };
 
   const handleSubmit = async (e) => {
@@ -118,7 +167,50 @@ export function RoleManagement({ onBack, user }) {
     }));
   };
 
-  const canManageRoles = user?.role?.name === 'owner';
+  const toggleGroup = (groupName, groupPerms) => {
+    const groupPermIds = groupPerms.map(name => {
+      const perm = permissions.find(p => p.name === name);
+      return perm?.id;
+    }).filter(Boolean);
+
+    const allSelected = groupPermIds.every(id => formData.permission_ids.includes(id));
+    
+    setFormData(prev => {
+      if (allSelected) {
+        return { ...prev, permission_ids: prev.permission_ids.filter(id => !groupPermIds.includes(id)) };
+      } else {
+        return { ...prev, permission_ids: [...new Set([...prev.permission_ids, ...groupPermIds])] };
+      }
+    });
+  };
+
+  const permissionsByGroup = useMemo(() => {
+    const grouped = {};
+    permissions.forEach(perm => {
+      for (const [groupName, permNames] of Object.entries(PERMISSION_GROUPS)) {
+        if (permNames.includes(perm.name)) {
+          if (!grouped[groupName]) grouped[groupName] = [];
+          grouped[groupName].push(perm);
+          break;
+        }
+      }
+    });
+    return grouped;
+  }, [permissions]);
+
+  const getRolePermissionsSummary = (rolePerms) => {
+    const summary = [];
+    for (const [groupName, groupPerms] of Object.entries(permissionsByGroup)) {
+      const rolePermIds = rolePerms?.map(p => p.id) || [];
+      const matchingCount = groupPerms.filter(p => rolePermIds.includes(p.id)).length;
+      if (matchingCount > 0) {
+        summary.push(`${groupName} (${matchingCount})`);
+      }
+    }
+    return summary;
+  };
+
+  const canManageRoles = user?.roles?.[0]?.name === 'owner';
 
   if (loading) {
     return (
@@ -157,6 +249,14 @@ export function RoleManagement({ onBack, user }) {
         >
           Atribuir Cargos
         </button>
+        {canManageRoles && (
+          <button
+            className={`admin-panel__tab ${activeTab === 'requests' ? 'admin-panel__tab--active' : ''}`}
+            onClick={() => setActiveTab('requests')}
+          >
+            Solicitações {registrationRequests.filter(r => r.status === 'pending').length > 0 && `(${registrationRequests.filter(r => r.status === 'pending').length})`}
+          </button>
+        )}
       </div>
 
       {error && <div className="alert alert--error">{error}</div>}
@@ -174,29 +274,31 @@ export function RoleManagement({ onBack, user }) {
           </div>
 
           {showCreate && (
-            <div className="admin-panel__form">
+            <div className="admin-panel__form admin-panel__form--wide">
               <h4>{editingRole ? 'Editar Cargo' : 'Novo Cargo'}</h4>
               <form onSubmit={handleSubmit}>
-                <div className="form-group">
-                  <label>Nome interno (slug)</label>
-                  <input
-                    type="text"
-                    value={formData.name}
-                    onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                    disabled={editingRole}
-                    placeholder="nome-do-cargo"
-                    required
-                  />
-                </div>
-                <div className="form-group">
-                  <label>Nome de exibição</label>
-                  <input
-                    type="text"
-                    value={formData.display_name}
-                    onChange={(e) => setFormData({ ...formData, display_name: e.target.value })}
-                    placeholder="Nome visível"
-                    required
-                  />
+                <div className="form-row">
+                  <div className="form-group">
+                    <label>Nome interno (slug)</label>
+                    <input
+                      type="text"
+                      value={formData.name}
+                      onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+                      disabled={editingRole}
+                      placeholder="nome-do-cargo"
+                      required
+                    />
+                  </div>
+                  <div className="form-group">
+                    <label>Nome de exibição</label>
+                    <input
+                      type="text"
+                      value={formData.display_name}
+                      onChange={(e) => setFormData({ ...formData, display_name: e.target.value })}
+                      placeholder="Nome visível"
+                      required
+                    />
+                  </div>
                 </div>
                 <div className="form-group">
                   <label>Descrição</label>
@@ -204,22 +306,49 @@ export function RoleManagement({ onBack, user }) {
                     value={formData.description}
                     onChange={(e) => setFormData({ ...formData, description: e.target.value })}
                     placeholder="Descrição opcional"
+                    rows={2}
                   />
                 </div>
 
                 <div className="form-group">
-                  <label>Permissões</label>
-                  <div className="admin-panel__permissions">
-                    {permissions.map(perm => (
-                      <label key={perm.id} className="checkbox-label">
-                        <input
-                          type="checkbox"
-                          checked={formData.permission_ids.includes(perm.id)}
-                          onChange={() => togglePermission(perm.id)}
-                        />
-                        <span>{perm.display_name}</span>
-                      </label>
-                    ))}
+                  <label>Permissões por Categoria</label>
+                  <div className="permission-groups">
+                    {Object.entries(permissionsByGroup).map(([groupName, groupPerms]) => {
+                      const groupPermIds = groupPerms.map(p => p.id);
+                      const allSelected = groupPermIds.every(id => formData.permission_ids.includes(id));
+                      const someSelected = groupPermIds.some(id => formData.permission_ids.includes(id));
+
+                      return (
+                        <div key={groupName} className="permission-group">
+                          <div className="permission-group__header">
+                            <label className="checkbox-label checkbox-label--bold">
+                              <input
+                                type="checkbox"
+                                checked={allSelected}
+                                ref={(el) => { if (el) el.indeterminate = someSelected && !allSelected; }}
+                                onChange={() => toggleGroup(groupName, PERMISSION_GROUPS[groupName])}
+                              />
+                              <span>{groupName}</span>
+                            </label>
+                            <span className="permission-group__count">
+                              {groupPermIds.filter(id => formData.permission_ids.includes(id)).length}/{groupPerms.length}
+                            </span>
+                          </div>
+                          <div className="permission-group__items">
+                            {groupPerms.map(perm => (
+                              <label key={perm.id} className="checkbox-label checkbox-label--inline">
+                                <input
+                                  type="checkbox"
+                                  checked={formData.permission_ids.includes(perm.id)}
+                                  onChange={() => togglePermission(perm.id)}
+                                />
+                                <span>{perm.display_name}</span>
+                              </label>
+                            ))}
+                          </div>
+                        </div>
+                      );
+                    })}
                   </div>
                 </div>
 
@@ -235,31 +364,49 @@ export function RoleManagement({ onBack, user }) {
             </div>
           )}
 
-          <div className="admin-panel__list">
-            {roles.map(role => (
-              <div key={role.id} className="role-card">
-                <div className="role-card__header">
-                  <strong>{role.display_name}</strong>
-                  <span className="role-card__name">({role.name})</span>
-                </div>
-                <p className="role-card__desc">{role.description}</p>
-                <div className="role-card__permissions">
-                  {role.permissions?.map(p => (
-                    <span key={p.id} className="permission-badge">{p.display_name}</span>
-                  ))}
-                </div>
-                {canManageRoles && role.name !== 'owner' && (
-                  <div className="role-card__actions">
-                    <button onClick={() => handleEdit(role)} className="btn btn--sm btn--ghost">
-                      Editar
-                    </button>
-                    <button onClick={() => handleDelete(role.id)} className="btn btn--sm btn--danger">
-                      Deletar
-                    </button>
-                  </div>
-                )}
-              </div>
-            ))}
+          <div className="admin-panel__roles-table">
+            <table>
+              <thead>
+                <tr>
+                  <th>Cargo</th>
+                  <th>Descrição</th>
+                  <th>Permissões</th>
+                  {canManageRoles && <th>Ações</th>}
+                </tr>
+              </thead>
+              <tbody>
+                {roles.map(role => (
+                  <tr key={role.id}>
+                    <td>
+                      <strong>{role.display_name}</strong>
+                      <span className="role-card__name">({role.name})</span>
+                    </td>
+                    <td>{role.description || '-'}</td>
+                    <td>
+                      <div className="role-permissions-summary">
+                        {getRolePermissionsSummary(role.permissions).map((summary, idx) => (
+                          <span key={idx} className="permission-summary-item">{summary}</span>
+                        ))}
+                      </div>
+                    </td>
+                    {canManageRoles && (
+                      <td>
+                        {role.name !== 'owner' && (
+                          <div className="role-card__actions">
+                            <button onClick={() => handleEdit(role)} className="btn btn--sm btn--ghost">
+                              Editar
+                            </button>
+                            <button onClick={() => handleDelete(role.id)} className="btn btn--sm btn--danger">
+                              Deletar
+                            </button>
+                          </div>
+                        )}
+                      </td>
+                    )}
+                  </tr>
+                ))}
+              </tbody>
+            </table>
           </div>
         </div>
       )}
@@ -286,17 +433,17 @@ export function RoleManagement({ onBack, user }) {
                     <td>{u.name}</td>
                     <td>{u.email}</td>
                     <td>
-                      <span className={`badge badge--${u.role?.name || 'member'}`}>
-                        {u.role?.display_name || 'Sem cargo'}
+                      <span className={`badge badge--${u.roles?.[0]?.name || 'member'}`}>
+                        {u.roles?.[0]?.display_name || 'Sem cargo'}
                       </span>
                     </td>
                     <td>
                       <div className="user-permissions">
-                        {u.role?.permissions?.slice(0, 3).map(p => (
+                        {u.roles?.[0]?.permissions?.slice(0, 3).map(p => (
                           <span key={p.id} className="permission-badge">{p.name}</span>
                         ))}
-                        {u.role?.permissions?.length > 3 && (
-                          <span className="permission-badge">+{u.role.permissions.length - 3}</span>
+                        {u.roles?.[0]?.permissions?.length > 3 && (
+                          <span className="permission-badge">+{u.roles[0].permissions.length - 3}</span>
                         )}
                       </div>
                     </td>
@@ -357,6 +504,90 @@ export function RoleManagement({ onBack, user }) {
               Apenas o Dono pode atribuir cargos aos membros.
             </div>
           )}
+        </div>
+      )}
+
+      {activeTab === 'requests' && canManageRoles && (
+        <div className="admin-panel__content">
+          <div className="admin-panel__section-header">
+            <h3>Solicitações de Cadastro</h3>
+          </div>
+
+          {registrationRequests.length === 0 ? (
+            <div className="empty-state">
+              <p>Nenhuma solicitação pendente</p>
+            </div>
+          ) : (
+            <div className="admin-panel__requests-table">
+              <table>
+                <thead>
+                  <tr>
+                    <th>Nome</th>
+                    <th>Email</th>
+                    <th>Data da Solicitação</th>
+                    <th>Status</th>
+                    <th>Ações</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {registrationRequests.map(req => (
+                    <tr key={req.id}>
+                      <td>{req.name}</td>
+                      <td>{req.email}</td>
+                      <td>{new Date(req.created_at).toLocaleDateString('pt-BR')}</td>
+                      <td>
+                        <span className={`badge badge--${req.status === 'pending' ? 'warning' : req.status === 'approved' ? 'success' : 'danger'}`}>
+                          {req.status === 'pending' ? 'Pendente' : req.status === 'approved' ? 'Aprovado' : 'Rejeitado'}
+                        </span>
+                      </td>
+                      <td>
+                        {req.status === 'pending' && (
+                          <div className="request-actions">
+                            <button onClick={() => openApproveModal(req.id)} className="btn btn--sm btn--primary">
+                              Aprovar
+                            </button>
+                            <button onClick={() => handleReject(req.id)} className="btn btn--sm btn--danger">
+                              Rejeitar
+                            </button>
+                          </div>
+                        )}
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          )}
+        </div>
+      )}
+
+      {showApproveModal && (
+        <div className="modal-overlay">
+          <div className="modal">
+            <h4>Aprovar Solicitação</h4>
+            <p>Selecione o cargo que será atribuído ao novo usuário:</p>
+            <div className="form-group">
+              <select
+                value={approveData.role_id}
+                onChange={(e) => setApproveData({ ...approveData, role_id: e.target.value })}
+              >
+                <option value="">Sem cargo (acesso básico)</option>
+                {roles.map(r => (
+                  <option key={r.id} value={r.id}>
+                    {r.display_name}
+                  </option>
+                ))}
+              </select>
+            </div>
+            <div className="modal__actions">
+              <button onClick={() => handleApprove(approveData.requestId)} className="btn btn--primary">
+                Confirmar
+              </button>
+              <button onClick={() => setShowApproveModal(false)} className="btn btn--ghost">
+                Cancelar
+              </button>
+            </div>
+          </div>
         </div>
       )}
     </div>

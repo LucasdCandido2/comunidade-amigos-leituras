@@ -94,6 +94,7 @@ function App() {
       setShowHome(true);
       setShowProfile(false);
       setShowWiki(false);
+      setShowAdmin(false);
     }
   };
 
@@ -329,7 +330,7 @@ function App() {
               onClick={handleShowProfile}
               className="btn btn--sm btn--ghost navbar__profile-btn"
             >
-              👤 {user.name} {user.role && <span style={{ opacity: 0.7, fontSize: '0.85em' }}>({user.role.display_name})</span>}
+              👤 {user.name} {user.roles?.[0] && <span style={{ opacity: 0.7, fontSize: '0.85em' }}>({user.roles[0].display_name})</span>}
             </button>
 
             <button onClick={handleLogout} className="btn btn--sm btn--ghost">

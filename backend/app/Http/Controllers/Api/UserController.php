@@ -13,7 +13,7 @@ class UserController extends Controller
 {
     public function index(Request $request): JsonResponse
     {
-        $query = User::with('role');
+        $query = User::with('roles');
 
         if ($request->has('search')) {
             $search = $request->search;
@@ -30,7 +30,7 @@ class UserController extends Controller
 
     public function show(int $id): JsonResponse
     {
-        $user = User::with(['role', 'role.permissions'])->findOrFail($id);
+        $user = User::with(['roles', 'roles.permissions'])->findOrFail($id);
         return response()->json($user);
     }
 
@@ -54,10 +54,9 @@ class UserController extends Controller
 
         $role = Role::findOrFail($request->role_id);
         
-        $user->role()->associate($role);
-        $user->save();
+        $user->roles()->sync([$role->id]);
 
-        $user->load('role');
+        $user->load('roles');
 
         return response()->json($user);
     }
@@ -82,10 +81,9 @@ class UserController extends Controller
         $user = User::findOrFail($request->user_id);
         $role = Role::findOrFail($request->role_id);
 
-        $user->role()->associate($role);
-        $user->save();
+        $user->roles()->sync([$role->id]);
 
-        $user->load('role');
+        $user->load('roles');
 
         return response()->json([
             'message' => 'Cargo atribuído com sucesso',

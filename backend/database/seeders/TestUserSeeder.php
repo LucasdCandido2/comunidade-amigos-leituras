@@ -16,8 +16,8 @@ class TestUserSeeder extends Seeder
     {
         DB::table('users')->updateOrInsert([
             'name' => 'Lucas Teste',
-            'email' => 'lucas1234@teste.com',
-            'password' => Hash::make('lucas12345'),
+            'email' => 'teste1234@teste.com',
+            'password' => Hash::make('teste12345'),
             'created_at' => now(),
             'updated_at' => now(),
         ]);

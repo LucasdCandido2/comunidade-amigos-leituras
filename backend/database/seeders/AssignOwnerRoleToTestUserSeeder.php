@@ -14,10 +14,10 @@ class AssignOwnerRoleToTestUserSeeder extends Seeder
      */
     public function run(): void
     {
-        $user = User::where('email', 'lucas1234@teste.com')->first();
+        $user = User::where('email', 'teste1234@teste.com')->first();
 
         if (!$user) {
-            echo "Usuario lucas12345 não encontrado.\n";
+            echo "Usuario teste1234@teste.com não encontrado.\n";
             return;
         }
 
@@ -28,8 +28,8 @@ class AssignOwnerRoleToTestUserSeeder extends Seeder
             return;
         }
 
-        $user->roles()->syncWithoutDetaching($ownerRole);
+        $user->roles()->syncWithoutDetaching([$ownerRole->id]);
 
-        echo "Cargo 'Dono' atribuidoao usuario lucas12345 com sucesso.\n";
+        echo "Cargo 'Dono' atribuido ao usuario teste1234@teste.com com sucesso.\n";
     }
 }

@@ -14,9 +14,11 @@ use App\Http\Controllers\Api\ExternalSourceController;
 use App\Http\Controllers\Api\PdfController;
 use App\Http\Controllers\Api\RoleController;
 use App\Http\Controllers\Api\UserController;
+use App\Http\Controllers\Api\RegistrationRequestController;
 
 Route::post('/register', [AuthController::class, 'register']);
 Route::post('/login', [AuthController::class, 'login']);
+Route::post('/registration-request', [RegistrationRequestController::class, 'store']);
 Route::get('/assets/allowed-types', [AssetController::class, 'allowedTypes']);
 Route::get('/assets/{id}', [AssetController::class, 'show'])->name('assets.show');
 Route::get('/assets/{id}/signed', [AssetController::class, 'signedDownload'])->name('assets.signed');
@@ -74,6 +76,11 @@ Route::middleware('bearer')->group(function () {
     Route::put('/users/{id}/role', [UserController::class, 'updateRole']);
     Route::post('/users/assign-role', [UserController::class, 'assignRole']);
     Route::get('/users/roles', [UserController::class, 'listRoles']);
+    
+    // Solicitações de Cadastro (Admin)
+    Route::get('/registration-requests', [RegistrationRequestController::class, 'index']);
+    Route::post('/registration-requests/{id}/approve', [RegistrationRequestController::class, 'approve']);
+    Route::post('/registration-requests/{id}/reject', [RegistrationRequestController::class, 'reject']);
     
     Route::post('/logout', [AuthController::class, 'logout']);
 });

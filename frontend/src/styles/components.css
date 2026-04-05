@@ -2912,6 +2912,138 @@ select.form-control { cursor: pointer; }
   gap: var(--space-2);
 }
 
+.admin-panel__roles-table {
+  overflow-x: auto;
+}
+
+.admin-panel__roles-table table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.admin-panel__roles-table th,
+.admin-panel__roles-table td {
+  padding: var(--space-3);
+  text-align: left;
+  border-bottom: 1px solid var(--color-border);
+  vertical-align: top;
+}
+
+.admin-panel__roles-table th {
+  font-weight: var(--font-medium);
+  color: var(--color-text-secondary);
+  font-size: var(--text-sm);
+}
+
+.role-permissions {
+  display: flex;
+  gap: var(--space-1);
+  flex-wrap: wrap;
+  max-width: 400px;
+}
+
+.role-permissions-summary {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
+}
+
+.permission-summary-item {
+  font-size: var(--text-sm);
+  color: var(--color-text-secondary);
+  background: var(--color-surface-hover);
+  padding: var(--space-1) var(--space-2);
+  border-radius: var(--radius-sm);
+  display: inline-block;
+}
+
+.admin-panel__requests-table {
+  overflow-x: auto;
+}
+
+.admin-panel__requests-table table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.admin-panel__requests-table th,
+.admin-panel__requests-table td {
+  padding: var(--space-3);
+  text-align: left;
+  border-bottom: 1px solid var(--color-border);
+}
+
+.admin-panel__requests-table th {
+  font-weight: var(--font-medium);
+  color: var(--color-text-secondary);
+  font-size: var(--text-sm);
+}
+
+.request-actions {
+  display: flex;
+  gap: var(--space-2);
+}
+
+.badge--warning {
+  background: var(--color-warning);
+  color: var(--color-text-primary);
+}
+
+.badge--success {
+  background: var(--color-success);
+  color: var(--color-text-on-accent);
+}
+
+.badge--danger {
+  background: var(--color-danger);
+  color: var(--color-text-on-accent);
+}
+
+.modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.5);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+}
+
+.modal {
+  background: var(--color-bg);
+  border-radius: var(--radius-lg);
+  padding: var(--space-6);
+  max-width: 400px;
+  width: 100%;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
+}
+
+.modal h4 {
+  margin-top: 0;
+  margin-bottom: var(--space-3);
+}
+
+.modal p {
+  color: var(--color-text-secondary);
+  margin-bottom: var(--space-4);
+}
+
+.modal__actions {
+  display: flex;
+  gap: var(--space-3);
+  justify-content: flex-end;
+  margin-top: var(--space-4);
+}
+
+.empty-state {
+  text-align: center;
+  padding: var(--space-8);
+  color: var(--color-text-secondary);
+}
+
 .admin-panel__list {
   display: grid;
   gap: var(--space-4);
@@ -2943,6 +3075,57 @@ select.form-control { cursor: pointer; }
   display: flex;
   gap: var(--space-1);
   flex-wrap: wrap;
+}
+
+.admin-panel__form--wide {
+  max-width: 100%;
+}
+
+.admin-panel__form--wide .form-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: var(--space-4);
+}
+
+.permission-groups {
+  display: grid;
+  gap: var(--space-4);
+}
+
+.permission-group {
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  overflow: hidden;
+}
+
+.permission-group__header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: var(--space-3) var(--space-4);
+  background: var(--color-surface-hover);
+  border-bottom: 1px solid var(--color-border);
+}
+
+.permission-group__count {
+  font-size: var(--text-sm);
+  color: var(--color-text-secondary);
+  font-weight: var(--font-medium);
+}
+
+.permission-group__items {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-2);
+  padding: var(--space-3) var(--space-4);
+}
+
+.checkbox-label--bold span {
+  font-weight: var(--font-medium);
+}
+
+.checkbox-label--inline {
+  display: inline-flex;
 }
 
 /* Badge variants */

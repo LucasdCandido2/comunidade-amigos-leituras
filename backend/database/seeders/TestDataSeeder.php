@@ -28,9 +28,18 @@ class TestDataSeeder extends Seeder
 
         $user = User::where('email', 'teste1234@teste.com')->first();
 
+        $this->command->info("User ID: " . $user?->id);
+
         $ownerRole = Role::where('name', 'owner')->first();
+        
+        $this->command->info("Owner Role ID: " . $ownerRole?->id);
+
         if ($ownerRole && $user) {
-            $user->roles()->syncWithoutDetaching($ownerRole);
+            DB::table('user_role')->insert([
+                'user_id' => $user->id,
+                'role_id' => $ownerRole->id,
+            ]);
+            $this->command->info("Role assigned directly to user_role table");
         }
 
         $work = DB::table('works')->updateOrInsert(
