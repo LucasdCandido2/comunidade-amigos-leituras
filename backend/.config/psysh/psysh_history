@@ -1,0 +1,12 @@
+App\Models\Work::create(['title' => 'Naruto', 'description' => 'Um ninja laranja.', 'type' => 'anime']);
+App\Models\Work::create(['title' => 'Naruto', 'description' => 'Um ninja laranja.', 'type' => 'anime']);
+Work::orderBy('bayesian_rating', 'desc')->limit(10)->get();
+App\Models\Work::orderBy('bayesian_rating', 'desc')->limit(10)->get();
+App\Models\Work::orderBy('bayesian_rating', 'desc')->limit(10)->get();
+\App\Models\Work::select('id', 'title', 'bayesian_rating')->orderBy('bayesian_rating', 'desc')->limit(5)->get();
+DB::connection()->getPdo();
+exit
+auth()->loginUsingId(1); // ou o ID do usuário criado
+auth()->user(); // deve retornar o objeto do usuário
+auth()->loginUsingId(1);
+exit

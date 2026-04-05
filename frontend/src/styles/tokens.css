@@ -1,0 +1,310 @@
+/* ================================================================
+   DESIGN SYSTEM — Comunidade Amigos Leituras
+   ================================================================
+   Este arquivo é a FONTE ÚNICA DE VERDADE para todos os tokens
+   de design do projeto. Qualquer alteração visual deve ser feita
+   aqui primeiro.
+
+   ESTRUTURA:
+   1. Paleta base de cores (valores brutos)
+   2. Tokens semânticos — Tema Claro [data-theme="light"]
+   3. Tokens semânticos — Tema Escuro [data-theme="dark"]
+   4. Tokens globais (independentes de tema)
+   5. Tipografia
+   6. Espaçamento
+   7. Bordas & Sombras
+   8. Transições & Animações
+   ================================================================ */
+
+/* ----------------------------------------------------------------
+   1. PALETA BASE — cores brutas (não usar diretamente nos componentes)
+   ---------------------------------------------------------------- */
+:root {
+  /* Roxo (cor primária) */
+  --palette-purple-50:  #faf5ff;
+  --palette-purple-100: #f3e8ff;
+  --palette-purple-200: #e9d5ff;
+  --palette-purple-300: #d8b4fe;
+  --palette-purple-400: #c084fc;
+  --palette-purple-500: #a855f7;
+  --palette-purple-600: #9333ea;
+  --palette-purple-700: #7c3aed;
+  --palette-purple-800: #6d28d9;
+  --palette-purple-900: #4c1d95;
+
+  /* Azul (ações secundárias) */
+  --palette-blue-50:  #eff6ff;
+  --palette-blue-100: #dbeafe;
+  --palette-blue-400: #60a5fa;
+  --palette-blue-500: #3b82f6;
+  --palette-blue-600: #2563eb;
+  --palette-blue-700: #1d4ed8;
+
+  /* Verde (sucesso) */
+  --palette-green-50:  #f0fdf4;
+  --palette-green-100: #dcfce7;
+  --palette-green-500: #22c55e;
+  --palette-green-600: #16a34a;
+  --palette-green-700: #15803d;
+
+  /* Amarelo (aviso / rating) */
+  --palette-yellow-400: #facc15;
+  --palette-yellow-500: #eab308;
+  --palette-yellow-600: #ca8a04;
+
+  /* Vermelho (erro / danger) */
+  --palette-red-50:  #fef2f2;
+  --palette-red-100: #fee2e2;
+  --palette-red-500: #ef4444;
+  --palette-red-600: #dc2626;
+  --palette-red-700: #b91c1c;
+
+  /* Cinza neutro */
+  --palette-gray-0:   #ffffff;
+  --palette-gray-50:  #f9fafb;
+  --palette-gray-100: #f3f4f6;
+  --palette-gray-200: #e5e7eb;
+  --palette-gray-300: #d1d5db;
+  --palette-gray-400: #9ca3af;
+  --palette-gray-500: #6b7280;
+  --palette-gray-600: #4b5563;
+  --palette-gray-700: #374151;
+  --palette-gray-800: #1f2937;
+  --palette-gray-900: #111827;
+  --palette-gray-950: #030712;
+}
+
+/* ----------------------------------------------------------------
+   2. TOKENS SEMÂNTICOS — TEMA CLARO (padrão)
+   ---------------------------------------------------------------- */
+[data-theme="light"],
+:root {
+  /* Superfícies */
+  --color-bg:            var(--palette-gray-50);
+  --color-bg-elevated:   var(--palette-gray-0);
+  --color-bg-sunken:     var(--palette-gray-100);
+  --color-bg-overlay:    rgba(0, 0, 0, 0.04);
+
+  /* Textos */
+  --color-text-primary:   var(--palette-gray-900);
+  --color-text-secondary: var(--palette-gray-600);
+  --color-text-muted:     var(--palette-gray-400);
+  --color-text-inverse:   var(--palette-gray-0);
+  --color-text-on-accent: var(--palette-gray-0);
+
+  /* Bordas */
+  --color-border:         var(--palette-gray-200);
+  --color-border-strong:  var(--palette-gray-300);
+  --color-border-focus:   var(--palette-purple-500);
+
+  /* Primária (Purple) */
+  --color-primary:        var(--palette-purple-600);
+  --color-primary-hover:  var(--palette-purple-700);
+  --color-primary-light:  var(--palette-purple-50);
+  --color-primary-muted:  var(--palette-purple-200);
+
+  /* Ação (Blue) */
+  --color-action:         var(--palette-blue-600);
+  --color-action-hover:   var(--palette-blue-700);
+  --color-action-light:   var(--palette-blue-50);
+
+  /* Sucesso */
+  --color-success:        var(--palette-green-600);
+  --color-success-bg:     var(--palette-green-50);
+  --color-success-border: var(--palette-green-100);
+
+  /* Aviso */
+  --color-warning:        var(--palette-yellow-600);
+  --color-warning-bg:     #fefce8;
+  --color-warning-border: #fef08a;
+
+  /* Erro */
+  --color-error:          var(--palette-red-600);
+  --color-error-bg:       var(--palette-red-50);
+  --color-error-border:   var(--palette-red-100);
+
+  /* Stars / Rating */
+  --color-star:           var(--palette-yellow-400);
+
+  /* Código */
+  --color-code-bg:        var(--palette-gray-100);
+  --color-code-text:      var(--palette-purple-700);
+
+  /* Navegação / Sidebar */
+  --color-nav-bg:         var(--palette-gray-0);
+  --color-nav-border:     var(--palette-gray-200);
+
+  /* Card */
+  --color-card-bg:        var(--palette-gray-0);
+  --color-card-border:    var(--palette-gray-200);
+
+  /* Input */
+  --color-input-bg:       var(--palette-gray-0);
+  --color-input-border:   var(--palette-gray-300);
+  --color-input-focus:    var(--palette-purple-500);
+
+  /* Sombras */
+  --shadow-sm:   0 1px 2px rgba(0,0,0,0.05);
+  --shadow-md:   0 4px 6px -1px rgba(0,0,0,0.08), 0 2px 4px -2px rgba(0,0,0,0.05);
+  --shadow-lg:   0 10px 15px -3px rgba(0,0,0,0.08), 0 4px 6px -4px rgba(0,0,0,0.05);
+  --shadow-xl:   0 20px 25px -5px rgba(0,0,0,0.08), 0 8px 10px -6px rgba(0,0,0,0.05);
+  --shadow-focus: 0 0 0 3px rgba(168,85,247,0.25);
+}
+
+/* ----------------------------------------------------------------
+   3. TOKENS SEMÂNTICOS — TEMA ESCURO
+   ---------------------------------------------------------------- */
+[data-theme="dark"] {
+  /* Superfícies */
+  --color-bg:            #0f1117;
+  --color-bg-elevated:   #1a1d27;
+  --color-bg-sunken:     #0a0c12;
+  --color-bg-overlay:    rgba(255,255,255,0.04);
+
+  /* Textos */
+  --color-text-primary:   #f0f2f8;
+  --color-text-secondary: #9ca3af;
+  --color-text-muted:     #6b7280;
+  --color-text-inverse:   #0f1117;
+  --color-text-on-accent: #ffffff;
+
+  /* Bordas */
+  --color-border:         #2a2d3a;
+  --color-border-strong:  #3d4154;
+  --color-border-focus:   var(--palette-purple-400);
+
+  /* Primária (Purple — mais brilhante no dark) */
+  --color-primary:        var(--palette-purple-400);
+  --color-primary-hover:  var(--palette-purple-300);
+  --color-primary-light:  rgba(168,85,247,0.12);
+  --color-primary-muted:  rgba(168,85,247,0.2);
+
+  /* Ação */
+  --color-action:         var(--palette-blue-400);
+  --color-action-hover:   var(--palette-blue-500);
+  --color-action-light:   rgba(59,130,246,0.12);
+
+  /* Sucesso */
+  --color-success:        var(--palette-green-500);
+  --color-success-bg:     rgba(34,197,94,0.1);
+  --color-success-border: rgba(34,197,94,0.2);
+
+  /* Aviso */
+  --color-warning:        var(--palette-yellow-400);
+  --color-warning-bg:     rgba(234,179,8,0.1);
+  --color-warning-border: rgba(234,179,8,0.2);
+
+  /* Erro */
+  --color-error:          var(--palette-red-500);
+  --color-error-bg:       rgba(239,68,68,0.1);
+  --color-error-border:   rgba(239,68,68,0.2);
+
+  /* Stars / Rating */
+  --color-star:           var(--palette-yellow-400);
+
+  /* Código */
+  --color-code-bg:        rgba(168,85,247,0.08);
+  --color-code-text:      var(--palette-purple-300);
+
+  /* Navegação */
+  --color-nav-bg:         #1a1d27;
+  --color-nav-border:     #2a2d3a;
+
+  /* Card */
+  --color-card-bg:        #1a1d27;
+  --color-card-border:    #2a2d3a;
+
+  /* Input */
+  --color-input-bg:       #1a1d27;
+  --color-input-border:   #3d4154;
+  --color-input-focus:    var(--palette-purple-400);
+
+  /* Sombras (mais suaves no dark — menos contraste) */
+  --shadow-sm:   0 1px 2px rgba(0,0,0,0.3);
+  --shadow-md:   0 4px 6px -1px rgba(0,0,0,0.4), 0 2px 4px -2px rgba(0,0,0,0.3);
+  --shadow-lg:   0 10px 15px -3px rgba(0,0,0,0.5), 0 4px 6px -4px rgba(0,0,0,0.3);
+  --shadow-xl:   0 20px 25px -5px rgba(0,0,0,0.6), 0 8px 10px -6px rgba(0,0,0,0.4);
+  --shadow-focus: 0 0 0 3px rgba(192,132,252,0.3);
+}
+
+/* ----------------------------------------------------------------
+   4. TOKENS GLOBAIS (independentes de tema)
+   ---------------------------------------------------------------- */
+:root {
+  /* Tipografia — Famílias */
+  --font-sans:    'Inter', system-ui, -apple-system, 'Segoe UI', sans-serif;
+  --font-heading: 'Inter', system-ui, -apple-system, 'Segoe UI', sans-serif;
+  --font-mono:    'Fira Code', ui-monospace, 'Cascadia Code', Consolas, monospace;
+
+  /* Tipografia — Tamanhos */
+  --text-xs:   0.75rem;    /* 12px */
+  --text-sm:   0.875rem;   /* 14px */
+  --text-base: 1rem;       /* 16px */
+  --text-lg:   1.125rem;   /* 18px */
+  --text-xl:   1.25rem;    /* 20px */
+  --text-2xl:  1.5rem;     /* 24px */
+  --text-3xl:  1.875rem;   /* 30px */
+  --text-4xl:  2.25rem;    /* 36px */
+
+  /* Tipografia — Pesos */
+  --font-normal:   400;
+  --font-medium:   500;
+  --font-semibold: 600;
+  --font-bold:     700;
+
+  /* Tipografia — Line-heights */
+  --leading-tight:  1.25;
+  --leading-snug:   1.375;
+  --leading-normal: 1.5;
+  --leading-relaxed:1.625;
+
+  /* Espaçamento (múltiplos de 4px) */
+  --space-0:  0;
+  --space-1:  0.25rem;  /* 4px  */
+  --space-2:  0.5rem;   /* 8px  */
+  --space-3:  0.75rem;  /* 12px */
+  --space-4:  1rem;     /* 16px */
+  --space-5:  1.25rem;  /* 20px */
+  --space-6:  1.5rem;   /* 24px */
+  --space-8:  2rem;     /* 32px */
+  --space-10: 2.5rem;   /* 40px */
+  --space-12: 3rem;     /* 48px */
+  --space-16: 4rem;     /* 64px */
+
+  /* Border Radius */
+  --radius-sm:   4px;
+  --radius-md:   8px;
+  --radius-lg:   12px;
+  --radius-xl:   16px;
+  --radius-2xl:  24px;
+  --radius-full: 9999px;
+
+  /* Layout */
+  --container-sm:   640px;
+  --container-md:   768px;
+  --container-lg:   1024px;
+  --container-xl:   1280px;
+
+  /* Z-index scale */
+  --z-base:    1;
+  --z-sticky:  100;
+  --z-modal:   200;
+  --z-toast:   300;
+  --z-tooltip: 400;
+
+  /* Transições */
+  --duration-fast:   100ms;
+  --duration-base:   200ms;
+  --duration-slow:   300ms;
+  --ease-default:    cubic-bezier(0.4, 0, 0.2, 1);
+  --ease-in:         cubic-bezier(0.4, 0, 1, 1);
+  --ease-out:        cubic-bezier(0, 0, 0.2, 1);
+  --ease-bounce:     cubic-bezier(0.34, 1.56, 0.64, 1);
+
+  /* Composição de transição padrão */
+  --transition-colors: color var(--duration-base) var(--ease-default),
+                       background-color var(--duration-base) var(--ease-default),
+                       border-color var(--duration-base) var(--ease-default);
+  --transition-shadow: box-shadow var(--duration-base) var(--ease-default);
+  --transition-all:    all var(--duration-base) var(--ease-default);
+}

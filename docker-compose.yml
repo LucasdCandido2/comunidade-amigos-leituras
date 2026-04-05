@@ -1,0 +1,97 @@
+services:
+  # Backend: Laravel 10 (PHP 8.1-FPM)
+  app:
+    build:
+      context: .
+      dockerfile: docker/php/Dockerfile
+    container_name: comunidade_app
+    restart: unless-stopped
+    working_dir: /var/www
+    volumes:
+      - ./backend:/var/www
+      # Permite que o container escreva logs e cache
+      - /var/www/storage
+      - /var/www/bootstrap/cache
+    networks:
+      - comunidade_net
+    depends_on:
+      db:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    environment:
+      - DB_HOST=db
+      - DB_PORT=5432
+      - DB_DATABASE=comunidade_db
+      - DB_USERNAME=user_admin
+      - DB_PASSWORD=password_secret
+      - REDIS_HOST=redis
+      - APP_ENV=local
+
+  # Servidor Web: Nginx (Proxy reverso para o PHP-FPM)
+  web:
+    image: nginx:alpine
+    container_name: comunidade_web
+    restart: unless-stopped
+    ports:
+      - "8000:80"
+    volumes:
+      - ./backend:/var/www
+      - ./docker/nginx/default.conf:/etc/nginx/conf.d/default.conf
+    networks:
+      - comunidade_net
+    depends_on:
+      - app
+
+  # Banco de Dados: PostgreSQL 15
+  db:
+    image: postgres:15-alpine
+    container_name: comunidade_db
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: comunidade_db
+      POSTGRES_USER: user_admin
+      POSTGRES_PASSWORD: password_secret
+    volumes:
+      - db_data:/var/lib/postgresql/data
+    networks:
+      - comunidade_net
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U user_admin"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # Cache & Sessão: Redis
+  redis:
+    image: redis:alpine
+    container_name: comunidade_redis
+    networks:
+      - comunidade_net
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 3s
+      retries: 3
+
+  # Frontend: React (Vite) - Ambiente de Desenvolvimento
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: ../docker/frontend/Dockerfile
+    container_name: comunidade_front
+    working_dir: /app
+    volumes:
+      - ./frontend:/app
+      - /app/node_modules
+    ports:
+      - "3000:3000"
+    networks:
+      - comunidade_net
+
+networks:
+  comunidade_net:
+    driver: bridge
+
+volumes:
+  db_data:

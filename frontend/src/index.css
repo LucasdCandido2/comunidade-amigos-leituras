@@ -1,0 +1,16 @@
+/* ================================================================
+   index.css — Entrada principal de estilos
+   ================================================================
+   Ordem de importação é importante:
+   1. tokens.css  → variáveis CSS (design tokens)
+   2. components.css → estilos de componentes
+   ================================================================ */
+
+@import './styles/tokens.css';
+@import './styles/components.css';
+
+/* ================================================================
+   FONTE EXTERNA — Inter (Google Fonts)
+   Carregada aqui para não bloquear componentes.css
+   ================================================================ */
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');

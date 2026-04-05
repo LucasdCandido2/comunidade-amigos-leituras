@@ -1,0 +1,52 @@
+# Dependencies
+node_modules/
+vendor/
+
+# Build outputs
+frontend/dist/
+backend/public/build/
+
+# Environment files (do NOT commit secrets)
+.env
+.env.local
+.env.*.local
+*.env
+
+# IDE
+.idea/
+.vscode/
+*.swp
+*.swo
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Laravel
+backend/storage/*.key
+backend/storage/logs/*.log
+backend/bootstrap/cache/*.php
+backend/.phpunit.result.cache
+
+# Logs
+*.log
+logs/
+
+# Testing
+coverage/
+.phpunit.cache/
+
+# Docker (volume data)
+db_data/
+redis_data/
+
+# Cache
+.cache/
+tmp/
+temp/
+
+# Secrets/Keys (do NOT commit)
+*.pem
+*.key
+id_rsa*
+*.secret
