@@ -219,6 +219,20 @@ export function RichTextEditor({
     { divider: true },
     { icon: '🔗', action: setLink, active: editor.isActive('link'), title: 'Link' },
     { icon: '🖼️', action: addImage, title: 'Inserir Imagem' },
+    { icon: '⬅', action: () => { 
+      const { selection } = editor.state;
+      const node = selection.$from.nodeAfter;
+      if (node && node.type.name === 'image') {
+        editor.chain().focus().updateAttributes('image', { align: 'left', width: '45%' }).run();
+      }
+    }, title: 'Imagem à Esquerda' },
+    { icon: '➡', action: () => { 
+      const { selection } = editor.state;
+      const node = selection.$from.nodeAfter;
+      if (node && node.type.name === 'image') {
+        editor.chain().focus().updateAttributes('image', { align: 'right', width: '45%' }).run();
+      }
+    }, title: 'Imagem à Direita' },
     { divider: true },
     { icon: '─', action: () => editor.chain().focus().setHorizontalRule().run(), title: 'Linha Horizontal' },
   ];

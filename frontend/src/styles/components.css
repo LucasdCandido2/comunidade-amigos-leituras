@@ -1154,13 +1154,13 @@ select.form-control { cursor: pointer; }
 .rich-editor__content .ProseMirror img.rich-image,
 .rich-content img.rich-image,
 .chat-bubble__message img.rich-image {
-  max-width: 50%;
-  width: 50% !important;
+  max-width: 45%;
+  width: 45% !important;
   height: auto;
   max-height: 200px;
   object-fit: contain;
   border-radius: var(--radius-md);
-  margin: var(--space-2) var(--space-3) var(--space-2) 0;
+  margin: var(--space-2) var(--space-4) var(--space-2) 0;
   float: left;
   display: block;
 }
@@ -1172,8 +1172,8 @@ select.form-control { cursor: pointer; }
 .rich-content ul,
 .rich-content ol,
 .chat-bubble__message p {
-  clear: none;
   margin-bottom: var(--space-2);
+  line-height: 1.6;
 }
 
 .rich-editor__content .ProseMirror::after,
@@ -1211,22 +1211,22 @@ select.form-control { cursor: pointer; }
 }
 
 /* Image alignment */
-.rich-editor__content .ProseMirror img.rich-image--left {
+.rich-editor__content .ProseMirror img.rich-image--left,
+.rich-content img.rich-image--left {
   float: left;
   clear: both;
+  margin-right: var(--space-4);
 }
 
-.rich-editor__content .ProseMirror img.rich-image--right {
+.rich-editor__content .ProseMirror img.rich-image--right,
+.rich-content img.rich-image--right {
   float: right;
   clear: both;
+  margin-left: var(--space-4);
 }
 
-.rich-editor__content .ProseMirror img.rich-image--right {
-  float: right;
-  clear: both;
-}
-
-.rich-editor__content .ProseMirror img.rich-image--center {
+.rich-editor__content .ProseMirror img.rich-image--center,
+.rich-content img.rich-image--center {
   display: block;
   margin-left: auto;
   margin-right: auto;
@@ -1326,8 +1326,13 @@ select.form-control { cursor: pointer; }
   line-height: var(--leading-relaxed);
 }
 
+.rich-content > *:first-child {
+  margin-top: 0;
+}
+
 .rich-content p {
-  margin: 0 0 var(--space-3);
+  margin: 0 0 var(--space-2);
+  min-height: 1.5em;
 }
 
 .rich-content p:last-child {

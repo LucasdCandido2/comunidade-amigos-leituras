@@ -302,7 +302,7 @@ function App() {
             >
               🔗 Wiki
             </button>
-            {user?.role?.name === 'owner' && (
+            {user && (
               <button
                 onClick={handleShowAdmin}
                 className={`btn btn--sm ${showAdmin ? 'btn--primary' : 'btn--ghost'}`}
