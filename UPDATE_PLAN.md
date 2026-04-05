@@ -78,12 +78,13 @@ Este documento apresenta um plano de evolução para o projeto, identificando me
 
 ### Fase 1: Otimizações Imediatas (Agora)
 - [x] Sistema de solicitações de cadastro ✅
-- [ ] Lazy loading dos componentes principais
-- [ ] Memoização de componentes pesados
-- [ ] Otimizar carregamento inicial
+- [x] Lazy loading dos componentes principais ✅
+- [x] Memoização de componentes ✅
+- [x] Arquitetura MVVM com useAppViewModel ✅
+- [x] Corrigido bug: admin permanecia ativo ao clicar em início
 
 ### Fase 2: Refatoração (Próximas semanas)
-- [ ] React Router para navegação
+- [ ] Implementar React Router para navegação
 - [ ] Separar App.jsx em componentes menores
 - [ ] Limpar componentes duplicados
 
@@ -101,12 +102,17 @@ Este documento apresenta um plano de evolução para o projeto, identificando me
 - [x] UI/UX melhorada para visualização de permissões
 - [x] Correções no fluxo de roles (many-to-many)
 - [x] Reset showAdmin no logout
+- [x] Lazy loading com React.lazy + Suspense
+- [x] Memoização de TopicsList
+- [x] Cache de requisições no axios
+- [x] Arquitetura MVVM (useAppViewModel hook)
+- [x] Corrigido bug admin permanece ativo ao voltar para início
 
 ---
 
-## Notas
+## Próximas Otimizações Pendentes
 
-O projeto está em estado funcional com 109 testes passando. A base é sólida, mas precisa de:
-1. Otimização de performance
-2. Refatoração do frontend (App.jsx)
-3. Limpeza de código duplicado
+1. React Router para navegação (substituir ViewState por rotas)
+2. Separação de App.jsx em mais componentes
+3. Lazy loading de componentes pesados (WorkEditor, RoleManagement)
+4. Sistema de replies em comentários
