@@ -2,9 +2,70 @@ import React, { useState, useEffect, useRef } from "react";
 import { topicService } from "../services/topicService";
 import { interactionService } from "../services/interactionService";
 import { assetService } from "../services/assetService";
-import { SpoilerText } from "./SpoilerTag";
+import { SpoilerText, processSpoilerTags } from "./SpoilerTag";
 import { RichTextEditor } from "./RichTextEditor";
 import { sanitizeHtml } from "../utils/sanitize";
+
+function SpoilerContent({ html }) {
+    const [spoilers, setSpoilers] = useState({});
+    
+    const toggleSpoiler = (id) => {
+        setSpoilers(prev => ({ ...prev, [id]: !prev[id] }));
+    };
+    
+    const processContent = (content) => {
+        const spoilerRegex = /\[spoiler\](.*?)\[\/spoiler\]/gs;
+        const parts = [];
+        let lastIndex = 0;
+        let match;
+        let spoilerIndex = 0;
+        
+        while ((match = spoilerRegex.exec(content)) !== null) {
+            if (match.index > lastIndex) {
+                parts.push({
+                    type: 'text',
+                    content: content.slice(lastIndex, match.index),
+                });
+            }
+            
+            const spoilerId = `spoiler-${spoilerIndex}`;
+            parts.push({
+                type: 'spoiler',
+                id: spoilerId,
+                content: match[1],
+            });
+            
+            spoilerIndex++;
+            lastIndex = match.index + match[0].length;
+        }
+        
+        if (lastIndex < content.length) {
+            parts.push({
+                type: 'text',
+                content: content.slice(lastIndex),
+            });
+        }
+        
+        return parts;
+    };
+    
+    const handleClick = (e) => {
+        const target = e.target.closest('.spoiler-tag');
+        if (target && target.dataset.spoilerId) {
+            toggleSpoiler(target.dataset.spoilerId);
+        }
+    };
+    
+    const processedHtml = processSpoilerTags(html);
+    
+    return (
+        <div 
+            className="spoiler-content-wrapper"
+            onClick={handleClick}
+            dangerouslySetInnerHTML={{ __html: processedHtml }} 
+        />
+    );
+}
 
 export function TopicDetail({ topicId, user, onBack, onTopicDeleted }) {
     const [topic, setTopic]           = useState(null);
