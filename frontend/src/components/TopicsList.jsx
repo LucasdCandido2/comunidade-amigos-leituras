@@ -63,7 +63,7 @@ export const TopicsList = React.memo(function TopicsList({ topics, user, onViewT
       ))}
     </div>
   );
-}
+});
 
 function formatTime(dateString) {
   const date = new Date(dateString);
