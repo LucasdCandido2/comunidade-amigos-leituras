@@ -98,9 +98,4 @@ class TopicController extends Controller
 
         return response()->json(['message' => 'Tópico deletado com sucesso']);
     }
-
-        $topic->delete();
-
-        return response()->json(['message' => 'Topico excluido com sucesso']);
-    }
 }
