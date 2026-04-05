@@ -1,20 +1,21 @@
-import React, { useState, useEffect, useMemo, useCallback } from 'react';
-import { CreateTopic } from './components/CreateTopic';
-import { TopicDetail } from './components/TopicDetail';
-import { WorksRanking } from './components/WorksRanking';
-import { WorkEditor } from './components/WorkEditor';
+import React, { useState, useEffect, useMemo, useCallback, Suspense, lazy } from 'react';
 import { ThemeToggle } from './components/ThemeToggle';
-import { Home } from './components/Home';
-import { UserProfile } from './components/UserProfile';
-import { WikiSources } from './components/WikiSources';
 import { NotificationBell } from './components/NotificationBell';
 import { SearchBar } from './components/SearchBar';
 import { TopicsList } from './components/TopicsList';
-import { RoleManagement } from './components/RoleManagement';
 import { topicService } from './services/topicService';
 import { authService } from './services/authService';
-import { Login } from './components/Login';
-import { Register } from './components/Register';
+
+const Login = lazy(() => import('./components/Login'));
+const Register = lazy(() => import('./components/Register'));
+const Home = lazy(() => import('./components/Home'));
+const TopicDetail = lazy(() => import('./components/TopicDetail'));
+const WorksRanking = lazy(() => import('./components/WorksRanking'));
+const WorkEditor = lazy(() => import('./components/WorkEditor'));
+const UserProfile = lazy(() => import('./components/UserProfile'));
+const WikiSources = lazy(() => import('./components/WikiSources'));
+const CreateTopic = lazy(() => import('./components/CreateTopic'));
+const RoleManagement = lazy(() => import('./components/RoleManagement'));
 
 const ViewState = {
   HOME: 'home',
@@ -25,6 +26,13 @@ const ViewState = {
   WIKI: 'wiki',
   ADMIN: 'admin',
 };
+
+const LoadingFallback = () => (
+  <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 'var(--space-8)' }}>
+    <div className="spinner" />
+    <span style={{ marginLeft: 'var(--space-3)' }}>Carregando...</span>
+  </div>
+);
 
 function useAppViewModel() {
   const [currentView, setCurrentView] = useState(ViewState.HOME);
@@ -58,7 +66,12 @@ function useAppViewModel() {
 
     try {
       const userData = await authService.getUser();
-      setUser(userData && userData.id ? userData : null);
+      if (userData && userData.id) {
+        setUser(userData);
+        localStorage.setItem('user', JSON.stringify(userData));
+      } else {
+        setUser(null);
+      }
     } catch {
       localStorage.removeItem('token');
       localStorage.removeItem('user');
@@ -74,15 +87,18 @@ function useAppViewModel() {
     } catch (error) {
       console.error('Erro ao carregar tópicos:', error);
       setTopics([]);
-    } finally {
-      setLoading(false);
     }
   }, []);
 
   useEffect(() => { checkUser(); }, [checkUser]);
+
   useEffect(() => {
-    if (user) loadTopics();
-    else { setTopics([]); setLoading(false); }
+    if (user) {
+      loadTopics();
+    } else {
+      setTopics([]);
+      setLoading(false);
+    }
   }, [user, loadTopics]);
 
   const navigate = useCallback((view, params = {}) => {
@@ -116,36 +132,13 @@ function useAppViewModel() {
     setCurrentView(ViewState.HOME);
   }, []);
 
-  const isAdminVisible = useMemo(() => {
-    return user && user.roles?.[0]?.name === 'owner';
-  }, [user]);
-
-  const isHomeActive = useMemo(() => {
-    return currentView === ViewState.HOME && !selectedTopicId;
-  }, [currentView, selectedTopicId]);
+  const isAdminVisible = useMemo(() => user?.roles?.[0]?.name === 'owner', [user]);
+  const isHomeActive = useMemo(() => currentView === ViewState.HOME && !selectedTopicId, [currentView, selectedTopicId]);
 
   return {
-    state: {
-      currentView,
-      selectedTopicId,
-      topics,
-      loading,
-      user,
-      showRegister,
-    },
-    actions: {
-      navigate,
-      handleLogout,
-      handleTopicCreated,
-      handleTopicDeleted,
-      handleWorkSaved,
-      setShowRegister,
-      checkUser,
-    },
-    computed: {
-      isAdminVisible,
-      isHomeActive,
-    },
+    state: { currentView, selectedTopicId, topics, loading, user, showRegister },
+    actions: { navigate, handleLogout, handleTopicCreated, handleTopicDeleted, handleWorkSaved, setShowRegister, checkUser },
+    computed: { isAdminVisible, isHomeActive },
   };
 }
 
@@ -177,35 +170,26 @@ function App() {
             <ThemeToggle variant="label" />
           </div>
         </nav>
-
         <div style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: 'var(--space-8)' }}>
-          {showRegister ? (
-            <>
-              <Register onRegister={() => { setShowRegister(false); checkUser(); }} />
-              <p style={{ marginTop: 'var(--space-4)', color: 'var(--color-text-secondary)', fontSize: 'var(--text-sm)' }}>
-                Já tem conta?{' '}
-                <button
-                  style={{ color: 'var(--color-primary)', background: 'none', border: 'none', cursor: 'pointer', fontWeight: 'var(--font-medium)', padding: 0 }}
-                  onClick={() => setShowRegister(false)}
-                >
-                  Entrar
-                </button>
-              </p>
-            </>
-          ) : (
-            <>
-              <Login onLogin={checkUser} />
-              <p style={{ marginTop: 'var(--space-4)', color: 'var(--color-text-secondary)', fontSize: 'var(--text-sm)' }}>
-                Não tem conta?{' '}
-                <button
-                  style={{ color: 'var(--color-primary)', background: 'none', border: 'none', cursor: 'pointer', fontWeight: 'var(--font-medium)', padding: 0 }}
-                  onClick={() => setShowRegister(true)}
-                >
-                  Registrar
-                </button>
-              </p>
-            </>
-          )}
+          <Suspense fallback={<LoadingFallback />}>
+            {showRegister ? (
+              <>
+                <Register onRegister={() => { setShowRegister(false); checkUser(); }} />
+                <p style={{ marginTop: 'var(--space-4)', color: 'var(--color-text-secondary)', fontSize: 'var(--text-sm)' }}>
+                  Já tem conta?{' '}
+                  <button style={{ color: 'var(--color-primary)', background: 'none', border: 'none', cursor: 'pointer', fontWeight: 'var(--font-medium)', padding: 0 }} onClick={() => setShowRegister(false)}>Entrar</button>
+                </p>
+              </>
+            ) : (
+              <>
+                <Login onLogin={checkUser} />
+                <p style={{ marginTop: 'var(--space-4)', color: 'var(--color-text-secondary)', fontSize: 'var(--text-sm)' }}>
+                  Não tem conta?{' '}
+                  <button style={{ color: 'var(--color-primary)', background: 'none', border: 'none', cursor: 'pointer', fontWeight: 'var(--font-medium)', padding: 0 }} onClick={() => setShowRegister(true)}>Registrar</button>
+                </p>
+              </>
+            )}
+          </Suspense>
         </div>
       </div>
     );
@@ -214,60 +198,37 @@ function App() {
   const renderContent = () => {
     if (selectedTopicId) {
       return (
-        <TopicDetail
-          topicId={selectedTopicId}
-          user={user}
-          onBack={() => navigate(ViewState.HOME)}
-          onTopicDeleted={handleTopicDeleted}
-        />
+        <Suspense fallback={<LoadingFallback />}>
+          <TopicDetail topicId={selectedTopicId} user={user} onBack={() => navigate(ViewState.HOME)} onTopicDeleted={handleTopicDeleted} />
+        </Suspense>
       );
     }
 
     switch (currentView) {
       case ViewState.RANKING:
-        return <WorksRanking onBack={() => navigate(ViewState.HOME)} />;
+        return <Suspense fallback={<LoadingFallback />}><WorksRanking onBack={() => navigate(ViewState.HOME)} /></Suspense>;
       case ViewState.WORKS:
-        return <WorkEditor onWorkSaved={handleWorkSaved} onCancel={() => navigate(ViewState.HOME)} />;
+        return <Suspense fallback={<LoadingFallback />}><WorkEditor onWorkSaved={handleWorkSaved} onCancel={() => navigate(ViewState.HOME)} /></Suspense>;
       case ViewState.PROFILE:
-        return (
-          <UserProfile
-            user={user}
-            onViewTopic={(id) => navigate(ViewState.TOPIC, { topicId: id })}
-            onBack={() => navigate(ViewState.HOME)}
-          />
-        );
+        return <Suspense fallback={<LoadingFallback />}><UserProfile user={user} onViewTopic={(id) => navigate(ViewState.TOPIC, { topicId: id })} onBack={() => navigate(ViewState.HOME)} /></Suspense>;
       case ViewState.WIKI:
-        return <WikiSources />;
+        return <Suspense fallback={<LoadingFallback />}><WikiSources /></Suspense>;
       case ViewState.ADMIN:
-        return <RoleManagement onBack={() => navigate(ViewState.HOME)} user={user} />;
+        return <Suspense fallback={<LoadingFallback />}><RoleManagement onBack={() => navigate(ViewState.HOME)} user={user} /></Suspense>;
       default:
         return (
-          <>
-            <Home
-              user={user}
-              onViewTopic={(id) => navigate(ViewState.TOPIC, { topicId: id })}
-              onShowRanking={() => navigate(ViewState.RANKING)}
-              onShowWorks={() => navigate(ViewState.WORKS)}
-              onNewTopic={() => createTopicRef.current?.focus()}
-            />
-
+          <Suspense fallback={<LoadingFallback />}>
+            <Home user={user} onViewTopic={(id) => navigate(ViewState.TOPIC, { topicId: id })} onShowRanking={() => navigate(ViewState.RANKING)} onShowWorks={() => navigate(ViewState.WORKS)} onNewTopic={() => createTopicRef.current?.focus()} />
             <div style={{ marginTop: 'var(--space-8)' }}>
               <CreateTopic ref={createTopicRef} onTopicCreated={handleTopicCreated} />
-
               <hr className="divider" />
-
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 'var(--space-4)' }}>
                 <h2 style={{ margin: 0 }}>Todas as Experiências</h2>
                 <span className="badge badge--neutral">{topics.length} tópico{topics.length !== 1 ? 's' : ''}</span>
               </div>
-
-              <TopicsList
-                topics={topics}
-                user={user}
-                onViewTopic={(id) => navigate(ViewState.TOPIC, { topicId: id })}
-              />
+              <TopicsList topics={topics} user={user} onViewTopic={(id) => navigate(ViewState.TOPIC, { topicId: id })} />
             </div>
-          </>
+          </Suspense>
         );
     }
   };
@@ -276,72 +237,24 @@ function App() {
     <div style={{ minHeight: '100svh', display: 'flex', flexDirection: 'column', background: 'var(--color-bg)' }}>
       <nav className="navbar">
         <div className="navbar__inner">
-          <button className="navbar__brand navbar__brand--button" onClick={() => navigate(ViewState.HOME)}>
-            📚 Amigos Leituras
-          </button>
-
+          <button className="navbar__brand navbar__brand--button" onClick={() => navigate(ViewState.HOME)}>📚 Amigos Leituras</button>
           <div className="navbar__actions">
-            <button
-              onClick={() => navigate(ViewState.HOME)}
-              className={`btn btn--sm ${isHomeActive ? 'btn--primary' : 'btn--ghost'}`}
-            >
-              🏠 Início
-            </button>
-            <button
-              onClick={() => navigate(ViewState.WORKS)}
-              className={`btn btn--sm ${currentView === ViewState.WORKS ? 'btn--primary' : 'btn--ghost'}`}
-            >
-              📖 Obras
-            </button>
-            <button
-              onClick={() => navigate(ViewState.RANKING)}
-              className={`btn btn--sm ${currentView === ViewState.RANKING ? 'btn--primary' : 'btn--ghost'}`}
-            >
-              🏆 Ranking
-            </button>
-            <button
-              onClick={() => navigate(ViewState.WIKI)}
-              className={`btn btn--sm ${currentView === ViewState.WIKI ? 'btn--primary' : 'btn--ghost'}`}
-            >
-              🔗 Wiki
-            </button>
-            {isAdminVisible && (
-              <button
-                onClick={() => navigate(ViewState.ADMIN)}
-                className={`btn btn--sm ${currentView === ViewState.ADMIN ? 'btn--primary' : 'btn--ghost'}`}
-              >
-                ⚙️ Admin
-              </button>
-            )}
-
+            <button onClick={() => navigate(ViewState.HOME)} className={`btn btn--sm ${isHomeActive ? 'btn--primary' : 'btn--ghost'}`}>🏠 Início</button>
+            <button onClick={() => navigate(ViewState.WORKS)} className={`btn btn--sm ${currentView === ViewState.WORKS ? 'btn--primary' : 'btn--ghost'}`}>📖 Obras</button>
+            <button onClick={() => navigate(ViewState.RANKING)} className={`btn btn--sm ${currentView === ViewState.RANKING ? 'btn--primary' : 'btn--ghost'}`}>🏆 Ranking</button>
+            <button onClick={() => navigate(ViewState.WIKI)} className={`btn btn--sm ${currentView === ViewState.WIKI ? 'btn--primary' : 'btn--ghost'}`}>🔗 Wiki</button>
+            {isAdminVisible && <button onClick={() => navigate(ViewState.ADMIN)} className={`btn btn--sm ${currentView === ViewState.ADMIN ? 'btn--primary' : 'btn--ghost'}`}>⚙️ Admin</button>}
             <div style={{ width: '1px', background: 'var(--color-border)', height: '20px', margin: '0 var(--space-1)' }} />
-
             <ThemeToggle variant="icon" />
-
-            <SearchBar
-              onSelect={(item) => {
-                if (item.type === 'topic') {
-                  navigate(ViewState.TOPIC, { topicId: item.id });
-                }
-              }}
-            />
-
+            <SearchBar onSelect={(item) => { if (item.type === 'topic') navigate(ViewState.TOPIC, { topicId: item.id }); }} />
             <NotificationBell user={user} />
-
-            <button
-              onClick={() => navigate(ViewState.PROFILE)}
-              className="btn btn--sm btn--ghost navbar__profile-btn"
-            >
+            <button onClick={() => navigate(ViewState.PROFILE)} className="btn btn--sm btn--ghost navbar__profile-btn">
               👤 {user.name} {user.roles?.[0] && <span style={{ opacity: 0.7, fontSize: '0.85em' }}>({user.roles[0].display_name})</span>}
             </button>
-
-            <button onClick={handleLogout} className="btn btn--sm btn--ghost">
-              Sair
-            </button>
+            <button onClick={handleLogout} className="btn btn--sm btn--ghost">Sair</button>
           </div>
         </div>
       </nav>
-
       <main style={{ flex: 1, maxWidth: 'var(--container-xl)', width: '100%', margin: '0 auto', padding: 'var(--space-8) var(--space-6)' }}>
         {renderContent()}
       </main>

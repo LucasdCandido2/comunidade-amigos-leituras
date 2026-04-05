@@ -14,7 +14,12 @@ class TopicController extends Controller
      */
     public function index(): JsonResponse
     {
-        $topics = Topic::with(['work', 'user'])->paginate(10);
+        $cacheKey = 'topics:page:1:limit:10';
+        
+        $topics = \Illuminate\Support\Facades\Cache::remember($cacheKey, 300, function () {
+            return Topic::with(['work', 'user'])->paginate(10);
+        });
+        
         return response()->json($topics);
     }
 
@@ -39,6 +44,8 @@ class TopicController extends Controller
             'title' => $request->input('title'),
             'content' => $request->input('content'),
         ]);
+        
+        \Illuminate\Support\Facades\Cache::forget('topics:page:1:limit:10');
 
         return response()->json($topic, 201);
     }
@@ -82,8 +89,15 @@ class TopicController extends Controller
     public function destroy(Request $request, Topic $topic): JsonResponse
     {
         if ($request->user()->id !== $topic->user_id && !$request->user()->hasPermission('delete_any_topic')) {
-            return response()->json(['mensagem' => 'Acesso negado'], 403);
+            return response()->json(['message' => 'Acesso negado'], 403);
         }
+
+        $topic->delete();
+        
+        \Illuminate\Support\Facades\Cache::forget('topics:page:1:limit:10');
+
+        return response()->json(['message' => 'Tópico deletado com sucesso']);
+    }
 
         $topic->delete();
 

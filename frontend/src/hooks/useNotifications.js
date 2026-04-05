@@ -1,14 +1,15 @@
-import { useState, useEffect, useCallback, useRef } from 'react';
+import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { notificationService } from '../services/notificationService';
 
-export function useNotifications(userId, interval = 10000) {
+export function useNotifications(userId, interval = 30000, enabled = false) {
   const [notifications, setNotifications] = useState([]);
   const [unreadCount, setUnreadCount] = useState(0);
   const [loading, setLoading] = useState(false);
   const previousNotificationsRef = useRef([]);
+  const intervalRef = useRef(null);
 
   const loadNotifications = useCallback(async () => {
-    if (!userId) return;
+    if (!userId || !enabled) return;
     
     try {
       const data = await notificationService.getAll();
@@ -29,7 +30,7 @@ export function useNotifications(userId, interval = 10000) {
     } catch (error) {
       console.error('Erro ao carregar notificações:', error);
     }
-  }, [userId]);
+  }, [userId, enabled]);
 
   const markAsRead = useCallback(async (id) => {
     try {
@@ -55,8 +56,8 @@ export function useNotifications(userId, interval = 10000) {
 
   const deleteNotification = useCallback(async (id) => {
     try {
-      await notificationService.delete(id);
       const notification = notifications.find(n => n.id === id);
+      await notificationService.delete(id);
       setNotifications(prev => prev.filter(n => n.id !== id));
       if (notification && !notification.is_read) {
         setUnreadCount(prev => Math.max(0, prev - 1));
@@ -67,14 +68,16 @@ export function useNotifications(userId, interval = 10000) {
   }, [notifications]);
 
   useEffect(() => {
-    if (!userId) return;
+    if (!userId || !enabled) return;
 
     loadNotifications();
     
-    const intervalId = setInterval(loadNotifications, interval);
+    intervalRef.current = setInterval(loadNotifications, interval);
     
-    return () => clearInterval(intervalId);
-  }, [userId, interval, loadNotifications]);
+    return () => {
+      if (intervalRef.current) clearInterval(intervalRef.current);
+    };
+  }, [userId, interval, loadNotifications, enabled]);
 
   return {
     notifications,
@@ -98,18 +101,20 @@ function showNotificationToast(notification) {
 
 export function useNotificationPermission() {
   const [permission, setPermission] = useState(
-    typeof Notification !== 'undefined' ? Notification.permission : 'default'
+    typeof window !== 'undefined' && 'Notification' in window
+      ? Notification.permission
+      : 'denied'
   );
 
   const requestPermission = useCallback(async () => {
-    if (typeof Notification === 'undefined') return 'denied';
+    if (!('Notification' in window)) return 'denied';
     
     try {
       const result = await Notification.requestPermission();
       setPermission(result);
       return result;
     } catch (error) {
-      console.error('Erro ao pedir permissão:', error);
+      console.error('Erro ao solicitar permissão:', error);
       return 'denied';
     }
   }, []);

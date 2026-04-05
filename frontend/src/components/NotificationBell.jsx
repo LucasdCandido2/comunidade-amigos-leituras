@@ -12,7 +12,7 @@ export function NotificationBell({ user }) {
     markAsRead,
     markAllAsRead,
     deleteNotification,
-  } = useNotifications(user?.id, 10000);
+  } = useNotifications(user?.id, 30000, isOpen);
 
   useEffect(() => {
     if (permission === 'default') {

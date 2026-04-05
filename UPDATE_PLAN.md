@@ -78,10 +78,13 @@ Este documento apresenta um plano de evolução para o projeto, identificando me
 
 ### Fase 1: Otimizações Imediatas (Agora)
 - [x] Sistema de solicitações de cadastro ✅
-- [x] Lazy loading dos componentes principais ✅
-- [x] Memoização de componentes ✅
+- [x] Lazy loading de todos os componentes ✅
+- [x] Memoização de TopicsList e computed values ✅
 - [x] Arquitetura MVVM com useAppViewModel ✅
-- [x] Corrigido bug: admin permanecia ativo ao clicar em início
+- [x] Corrigido bug: admin permanecia ativo ao clicar em início ✅
+- [x] Cache de requisições axios (30s) ✅
+- [x] Notificações: intervalo aumentado (30s) + loading only when open ✅
+- [x] Backend: Cache Redis para tópicos (5min) ✅
 
 ### Fase 2: Refatoração (Próximas semanas)
 - [ ] Implementar React Router para navegação
