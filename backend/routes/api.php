@@ -68,7 +68,7 @@ Route::middleware('bearer')->group(function () {
     Route::post('/roles/{id}/assign-user', [RoleController::class, 'assignUser']);
     Route::delete('/roles/{roleId}/users/{userId}', [RoleController::class, 'removeUser']);
     
-    // Usuários (Admin)
+    // Usuários (Admin) - requer autenticação
     Route::get('/users', [UserController::class, 'index']);
     Route::get('/users/{id}', [UserController::class, 'show']);
     Route::put('/users/{id}/role', [UserController::class, 'updateRole']);
