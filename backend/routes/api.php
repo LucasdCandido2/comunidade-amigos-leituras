@@ -17,6 +17,10 @@ use App\Http\Controllers\Api\UserController;
 use App\Http\Controllers\Api\RegistrationRequestController;
 use App\Http\Controllers\Api\PopulateController;
 
+Route::options('{any}', function () {
+    return response('', 204);
+})->where('any', '.*');
+
 Route::post('/register', [AuthController::class, 'register']);
 Route::post('/login', [AuthController::class, 'login']);
 Route::post('/registration-request', [RegistrationRequestController::class, 'store']);
