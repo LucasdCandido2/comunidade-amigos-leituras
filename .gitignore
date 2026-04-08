@@ -50,3 +50,8 @@ temp/
 *.key
 id_rsa*
 *.secret
+
+# Deployment docs with sensitive data
+DEPLOY_ERRO.md
+DEPLOY.md
+*_ERRO.md
