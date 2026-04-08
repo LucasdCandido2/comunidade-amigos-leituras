@@ -1,6 +1,8 @@
 import axios from 'axios';
 
-const API_URL = import.meta.env.VITE_API_URL || 'https://comunidade-amigos-leituras-production.up.railway.app/api';
+const API_URL = import.meta.env.VITE_API_URL 
+    ? `${import.meta.env.VITE_API_URL}/api`
+    : 'https://comunidade-amigos-leituras-production.up.railway.app/api';
 
 const api = axios.create({
     baseURL: API_URL,
@@ -27,4 +29,4 @@ api.interceptors.response.use(
     }
 );
 
-export default api;
+export default api;// rebuild trigger
