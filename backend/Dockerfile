@@ -55,7 +55,6 @@ COPY database ./database
 COPY public ./public
 COPY routes ./routes
 COPY storage ./storage
-COPY tests ./tests
 
 # Cria pastas necessárias
 RUN mkdir -p /var/www/storage /var/www/bootstrap/cache
