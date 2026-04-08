@@ -3,12 +3,13 @@ FROM node:20-alpine AS builder
 WORKDIR /app
 
 COPY frontend/package*.json ./
+COPY frontend/vite.config.js ./
+
 RUN npm install
 
 COPY frontend/src ./src
 COPY frontend/public ./public
 COPY frontend/index.html ./
-COPY frontend/vite.config.js ./
 
 RUN npm run build
 
