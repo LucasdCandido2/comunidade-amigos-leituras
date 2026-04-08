@@ -26,13 +26,21 @@ Route::get('/leaderboard', [GamificationController::class, 'leaderboard']);
 Route::get('/badges', [GamificationController::class, 'allBadges']);
 Route::get('/topics/{id}/pdf', [PdfController::class, 'exportTopic']);
 
+// Busca em fontes externas (público)
+Route::get('/works/search', [WorkController::class, 'search']);
+Route::get('/works/fetch-external', [WorkController::class, 'fetchExternal']);
+Route::get('/works/top', [WorkController::class, 'index']);
+Route::get('/categories', [WorkController::class, 'categories']);
+Route::get('/categories/{categoryId}/works', [WorkController::class, 'worksByCategory']);
+Route::get('/works/letter/{letter}', [WorkController::class, 'byLetter']);
+Route::get('/works/letters', [WorkController::class, 'availableLetters']);
+
 Route::middleware('bearer')->group(function () {
     Route::get('/user', [AuthController::class, 'user']);
     Route::apiResource('topics', TopicController::class);
     Route::get('topics/{topic}/interactions', [InteractionController::class, 'index']);
     Route::post('topics/{topic}/interactions', [InteractionController::class, 'store']);
     Route::get('topics/{topic}/assets', [AssetController::class, 'byTopic']);
-    Route::get('/works/top', [WorkController::class, 'index']);
     Route::apiResource('works', WorkController::class, ['only' => ['index', 'store', 'show', 'update', 'destroy']]);
     Route::apiResource('assets', AssetController::class, ['only' => ['store', 'destroy']]);
     Route::get('/assets/{id}/signed-url', [AssetController::class, 'generateSignedUrl']);
@@ -59,6 +67,14 @@ Route::middleware('bearer')->group(function () {
     Route::get('/external-sources', [ExternalSourceController::class, 'index']);
     Route::post('/external-sources', [ExternalSourceController::class, 'store']);
     Route::delete('/external-sources/{id}', [ExternalSourceController::class, 'destroy']);
+    
+    // Busca em fontes externas
+    Route::get('/works/search', [WorkController::class, 'search']);
+    Route::get('/works/fetch-external', [WorkController::class, 'fetchExternal']);
+    Route::post('/works/{id}/sync', [WorkController::class, 'sync']);
+    
+    // Categorias
+    Route::post('/works/{workId}/categories', [WorkController::class, 'assignCategories']);
     
     // Cargos e Permissões (Admin)
     Route::get('/roles', [RoleController::class, 'index']);

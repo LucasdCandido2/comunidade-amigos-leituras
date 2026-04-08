@@ -11,9 +11,28 @@ const ALLOWED_TAGS = [
 
 const ALLOWED_ATTR = [
     'href', 'src', 'alt', 'title', 'class', 'id',
-    'width', 'height', 'align',
+    'width', 'height', 'align', 'style',
     'target', 'rel'
 ];
+
+const ALLOWED_CSS_PROPS = [
+    'float', 'width', 'max-width', 'height', 'max-height', 
+    'margin', 'border-radius', 'display', 'vertical-align'
+];
+
+const ALLOWED_IMG_CLASSES = ['image-left', 'image-right', 'editor-image'];
+
+const ALLOWED_SPAN_CLASSES = ['spoiler-tag'];
+
+const isAllowedUrl = (url) => {
+    if (!url) return false;
+    const trimmed = url.trim();
+    return trimmed.startsWith('http') || 
+           trimmed.startsWith('/') || 
+           trimmed.startsWith('data:') ||
+           trimmed.startsWith('assets/') ||
+           trimmed.startsWith('storage/');
+};
 
 export const sanitizeHtml = (html) => {
     if (!html) return '';
@@ -42,9 +61,47 @@ export const sanitizeHtml = (html) => {
                 let value = attr.value;
                 
                 if (attr.name === 'href' || attr.name === 'src') {
-                    if (!value.startsWith('http') && !value.startsWith('mailto:') && !value.startsWith('/')) {
+                    if (!isAllowedUrl(value)) {
                         continue;
                     }
+                }
+                
+                if (attr.name === 'class' && tagName === 'img') {
+                    const classes = value.split(' ').filter(c => ALLOWED_IMG_CLASSES.includes(c));
+                    if (classes.length > 0) {
+                        attrs += ` class="${classes.join(' ')}"`;
+                    }
+                    continue;
+                }
+                
+                if (attr.name === 'class' && tagName === 'span') {
+                    const classes = value.split(' ').filter(c => ALLOWED_SPAN_CLASSES.includes(c));
+                    if (classes.length > 0) {
+                        attrs += ` class="${classes.join(' ')}"`;
+                        if (value.includes('spoiler-tag')) {
+                            const dataSpoiler = node.getAttribute('data-spoiler');
+                            if (dataSpoiler) {
+                                attrs += ` data-spoiler="${escapeHtml(dataSpoiler)}"`;
+                            }
+                        }
+                    }
+                    continue;
+                }
+                
+                if (attr.name === 'data-spoiler') {
+                    attrs += ` data-spoiler="${escapeHtml(value)}"`;
+                    continue;
+                }
+                
+                if (attr.name === 'style') {
+                    const styleParts = value.split(';').filter(s => {
+                        const [key] = s.split(':').map(k => k.trim());
+                        return ALLOWED_CSS_PROPS.some(prop => key.includes(prop));
+                    });
+                    if (styleParts.length > 0) {
+                        attrs += ` style="${escapeHtml(styleParts.join('; '))}"`;
+                    }
+                    continue;
                 }
                 
                 attrs += ` ${attr.name}="${escapeHtml(value)}"`;
@@ -78,5 +135,32 @@ export const truncateHtml = (html, maxLength = 100) => {
     
     if (text.length <= maxLength) return clean;
     
-    return text.substring(0, maxLength).trim() + '...';
+    const truncatedText = text.substring(0, maxLength).trim();
+    const truncatedHtml = document.createElement('div');
+    truncatedHtml.textContent = truncatedText + '...';
+    
+    return truncatedHtml.innerHTML;
+};
+
+export const extractTextWithImages = (html, maxLength = 100) => {
+    if (!html) return '';
+    
+    const clean = sanitizeHtml(html);
+    const div = document.createElement('div');
+    div.innerHTML = clean;
+    
+    const images = Array.from(div.querySelectorAll('img'));
+    const imageHtml = images.map(img => img.outerHTML).join(' ');
+    
+    const text = div.textContent || div.innerText || '';
+    
+    if (text.length <= maxLength) {
+        return imageHtml + clean;
+    }
+    
+    const truncatedText = text.substring(0, maxLength).trim();
+    const result = document.createElement('div');
+    result.innerHTML = imageHtml + '<span>' + truncatedText + '...</span>';
+    
+    return result.innerHTML;
 };

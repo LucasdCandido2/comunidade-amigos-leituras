@@ -8,11 +8,7 @@ export const assetService = {
             formData.append('topic_id', topicId);
         }
 
-        const response = await api.post('/assets', formData, {
-            headers: {
-                'Content-Type': 'multipart/form-data',
-            },
-        });
+        const response = await api.post('/assets', formData);
         return response.data;
     },
 
@@ -34,13 +30,24 @@ export const assetService = {
     uploadInline: async (file) => {
         const formData = new FormData();
         formData.append('file', file);
-
-        const response = await api.post('/assets/upload-inline', formData, {
+        
+        const token = localStorage.getItem('token');
+        
+        const response = await fetch('/api/assets/upload-inline', {
+            method: 'POST',
             headers: {
-                'Content-Type': 'multipart/form-data',
+                'Authorization': `Bearer ${token}`,
+                'Accept': 'application/json',
             },
+            body: formData,
         });
-        return response.data;
+        
+        if (!response.ok) {
+            const errorData = await response.json();
+            throw new Error(errorData.message || 'Upload failed');
+        }
+        
+        return response.json();
     },
 
     getUrl: (id) => `/api/assets/${id}`,

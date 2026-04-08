@@ -1,37 +1,56 @@
-import React, { useState, useEffect } from "react";
+import React, { useState } from "react";
+import { useQuery } from "@tanstack/react-query";
 import { workService } from "../services/workService";
 
 export function WorksRanking({ onBack }) {
-    const [works, setWorks] = useState([]);
-    const [loading, setLoading] = useState(true);
+    const [activeFilter, setActiveFilter] = useState('all');
 
-    useEffect(() => {
-        loadTopWorks();
-    }, []);
-
-    const loadTopWorks = async () => {
-        try {
-            setLoading(true);
-            const data = await workService.getAll();
-            setWorks(Array.isArray(data) ? data : []);
-        } catch (error) {
-            console.error("Erro ao carregar obras:", error);
-            setWorks([]);
-        } finally {
-            setLoading(false);
-        }
-    };
+    const { data: works = [], isLoading, error } = useQuery({
+        queryKey: ['works', 'ranking'],
+        queryFn: () => workService.getAll(),
+        staleTime: 5 * 60 * 1000,
+    });
 
     const getTypeIcon = (type) => {
-        const icons = { book: '📚', manga: '🈶', anime: '🎌', comic: '💥', hq: '🦸' };
+        const icons = { book: '📚', manga: '🈶', anime: '🎌', comic: '💥', hq: '🦸', movie: '🎬', novel: '📖' };
         return icons[type] || '📖';
     };
 
-    if (loading) {
+    const workTypes = ['all', 'anime', 'manga', 'movie', 'novel', 'comic', 'hq', 'book'];
+    
+    const filteredWorks = activeFilter === 'all' 
+        ? works 
+        : works.filter(work => work.type === activeFilter);
+
+    const getTypeLabel = (type) => {
+        const labels = {
+            all: 'Todas',
+            anime: 'Animes',
+            manga: 'Mangás',
+            movie: 'Filmes',
+            novel: 'Romances',
+            comic: 'Comics',
+            hq: 'HQs',
+            book: 'Livros'
+        };
+        return labels[type] || type;
+    };
+
+    if (isLoading) {
         return (
             <div className="ranking-loading">
                 <div className="spinner" />
                 <span>Carregando ranking...</span>
+            </div>
+        );
+    }
+
+    if (error) {
+        return (
+            <div className="empty-state">
+                <div className="empty-state__icon">⚠️</div>
+                <p className="empty-state__title">Erro ao carregar ranking</p>
+                <button className="btn btn--primary" onClick={() => window.location.reload()}>Tentar novamente</button>
             </div>
         );
     }
@@ -44,12 +63,24 @@ export function WorksRanking({ onBack }) {
                 </button>
                 <div className="ranking__title-row">
                     <h1 className="ranking__title">🏆 Ranking de Obras</h1>
-                    <span className="badge badge--neutral">{works.length} obras</span>
+                    <span className="badge badge--neutral">{filteredWorks.length} obras</span>
                 </div>
                 <p className="ranking__subtitle">As obras mais bem avaliadas pela comunidade</p>
             </div>
 
-            {works.length === 0 ? (
+            <div className="works-filters">
+                {workTypes.map(type => (
+                    <button
+                        key={type}
+                        className={`works-filter-btn ${activeFilter === type ? 'works-filter-btn--active' : ''}`}
+                        onClick={() => setActiveFilter(type)}
+                    >
+                        {type === 'all' ? '🌟' : getTypeIcon(type)} {getTypeLabel(type)}
+                    </button>
+                ))}
+            </div>
+
+            {filteredWorks.length === 0 ? (
                 <div className="empty-state">
                     <div className="empty-state__icon">📚</div>
                     <p className="empty-state__title">Nenhuma obra encontrada</p>
@@ -57,7 +88,7 @@ export function WorksRanking({ onBack }) {
                 </div>
             ) : (
                 <div className="ranking__grid">
-                    {works.map((work, index) => (
+                    {filteredWorks.map((work, index) => (
                         <div key={work.id} className="ranking__card card">
                             <div className="ranking__card-position">
                                 <span className={`ranking__position ranking__position--${index + 1}`}>

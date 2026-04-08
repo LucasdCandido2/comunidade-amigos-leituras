@@ -5,6 +5,7 @@ namespace App\Http\Middleware;
 use Closure;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Log;
 use Laravel\Sanctum\PersonalAccessToken;
 use Symfony\Component\HttpFoundation\Response;
 
@@ -18,6 +19,8 @@ class BearerTokenAuth
      */
     public function handle(Request $request, Closure $next): Response
     {
+        $startTime = microtime(true);
+        
         $token = $request->bearerToken();
 
         if (!$token) {
@@ -36,13 +39,22 @@ class BearerTokenAuth
         // Atualizar last_used_at do token
         $accessToken->forceFill(['last_used_at' => now()])->save();
 
-        // Definir usuário via setUserResolver no request — garante que $request->user() funcione
-        $request->setUserResolver(fn() => $user);
-
         // Também definir via Auth::setUser (sem session) para compatibilidade
         Auth::setUser($user);
 
-        return $next($request);
+        $response = $next($request);
+        
+        $duration = round((microtime(true) - $startTime) * 1000, 2);
+        
+        Log::info('Request completed', [
+            'method' => $request->method(),
+            'path' => $request->path(),
+            'user_id' => $user->id,
+            'duration_ms' => $duration,
+            'status_code' => $response->getStatusCode(),
+        ]);
+        
+        return $response;
     }
 }
 

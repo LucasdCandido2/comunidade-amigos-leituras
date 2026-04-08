@@ -1,9 +1,9 @@
-import React, { useCallback, useState, useEffect } from 'react';
+import React, { useState, useCallback, useEffect } from 'react';
 import { useEditor, EditorContent } from '@tiptap/react';
 import StarterKit from '@tiptap/starter-kit';
 import Link from '@tiptap/extension-link';
 import Placeholder from '@tiptap/extension-placeholder';
-import { ResizableImage } from './extensions/ResizableImage';
+import Image from '@tiptap/extension-image';
 import { assetService } from '../services/assetService';
 
 const MAX_CHARS = 10000;
@@ -20,21 +20,20 @@ export function RichTextEditor({
   const [imageCount, setImageCount] = useState(0);
   const [error, setError] = useState(null);
   const [uploading, setUploading] = useState(false);
-  const [selectedImage, setSelectedImage] = useState(null);
   
   void topicId;
 
-  const countImages = (html) => {
+  const countImages = useCallback((html) => {
     const div = document.createElement('div');
     div.innerHTML = html;
     return div.querySelectorAll('img').length;
-  };
+  }, []);
 
-  const stripHtml = (html) => {
+  const stripHtml = useCallback((html) => {
     const div = document.createElement('div');
     div.innerHTML = html;
     return div.textContent || div.innerText || '';
-  };
+  }, []);
 
   const editor = useEditor({
     extensions: [
@@ -42,18 +41,15 @@ export function RichTextEditor({
         heading: false,
         codeBlock: false,
       }),
-      ResizableImage.configure({
+      Image.configure({
         inline: false,
         allowBase64: false,
         HTMLAttributes: {
-          class: 'rich-image',
+          class: 'editor-image',
         },
       }),
       Link.configure({
         openOnClick: false,
-        HTMLAttributes: {
-          class: 'rich-link',
-        },
       }),
       Placeholder.configure({
         placeholder,
@@ -61,6 +57,11 @@ export function RichTextEditor({
     ],
     content: content,
     editable,
+    editorProps: {
+      attributes: {
+        class: 'rich-text-editor__input',
+      },
+    },
     onUpdate: ({ editor }) => {
       const html = editor.getHTML();
       const text = stripHtml(html);
@@ -78,216 +79,159 @@ export function RichTextEditor({
   });
 
   useEffect(() => {
-    if (editor && content !== undefined) {
-      const currentHtml = editor.getHTML();
-      if (content !== currentHtml) {
-        editor.commands.setContent(content);
-        setImageCount(countImages(content));
-      }
+    if (editor && content !== editor.getHTML()) {
+      editor.commands.setContent(content || '');
     }
   }, [content, editor]);
 
-  const handleImageUpload = useCallback(async (file) => {
-    if (!file || !file.type.startsWith('image/')) {
-      setError('Tipo de arquivo não permitido');
-      return null;
-    }
+  const handleImageUpload = async (file) => {
+    if (!file) return;
     
     if (!ALLOWED_TYPES.includes(file.type)) {
-      setError('Formatos aceitos: PNG, JPEG, WebP, GIF');
-      return null;
+      setError('Tipo de arquivo não permitido. Use PNG, JPG, WEBP ou GIF.');
+      return;
     }
     
     if (imageCount >= MAX_IMAGES) {
-      setError(`Máximo de ${MAX_IMAGES} imagens por mensagem`);
-      return null;
+      setError(`Limite de ${MAX_IMAGES} imagens excedido.`);
+      return;
     }
 
-    if (uploading) {
-      return null;
-    }
-    
     setUploading(true);
     setError(null);
-    
+
     try {
-      const uploaded = await assetService.uploadInline(file);
+      const response = await assetService.uploadInline(file);
+      const imageUrl = response.url;
+
+      const align = imageCount % 2 === 0 ? 'left' : 'right';
+      const className = align === 'left' ? 'image-left' : 'image-right';
+      
+      editor.chain().focus().insertContent(`<img src="${imageUrl}" class="${className}" />`).run();
       setImageCount(prev => prev + 1);
-      return uploaded.url;
     } catch (err) {
-      console.error('Erro ao fazer upload da imagem:', err);
-      setError('Erro ao fazer upload da imagem');
-      return null;
+      const message = err.response?.data?.message || err.response?.data?.error || 'Erro ao fazer upload da imagem. Tente novamente.';
+      setError(message);
+      console.error('Upload error:', err);
     } finally {
       setUploading(false);
     }
-  }, [imageCount, uploading]);
+  };
 
-  const handlePaste = useCallback((event) => {
-    const items = event.clipboardData?.items;
-    if (!items) return;
-
-    for (const item of items) {
-      if (item.type.startsWith('image/')) {
-        event.preventDefault();
-        const file = item.getAsFile();
-        handleImageUpload(file).then(url => {
-          if (url && editor) {
-            editor.chain().focus().setImage({ src: url, width: '100%', align: 'left' }).run();
-          }
-        });
-        return;
-      }
+  const handleFileInput = (e) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      console.log('Selected file:', file.name, file.type, file.size);
+      handleImageUpload(file);
     }
-  }, [editor, handleImageUpload]);
+  };
 
-  const handleDrop = useCallback((event) => {
-    const files = event.dataTransfer?.files;
-    if (!files || files.length === 0) return;
+  const handleDrop = useCallback((e) => {
+    e.preventDefault();
+    const file = e.dataTransfer?.files?.[0];
+    if (file) handleImageUpload(file);
+  }, [editor, imageCount]);
 
-    for (const file of files) {
-      if (file.type.startsWith('image/')) {
-        event.preventDefault();
-        handleImageUpload(file).then(url => {
-          if (url && editor) {
-            editor.chain().focus().setImage({ src: url, width: '100%', align: 'left' }).run();
-          }
-        });
-        return;
-      }
-    }
-  }, [editor, handleImageUpload]);
+  const handleDragOver = (e) => {
+    e.preventDefault();
+  };
 
-  const addImage = useCallback(() => {
-    if (imageCount >= MAX_IMAGES) {
-      setError(`Máximo de ${MAX_IMAGES} imagens por mensagem`);
-      return;
-    }
-    const input = document.createElement('input');
-    input.type = 'file';
-    input.accept = 'image/png,image/jpeg,image/webp,image/gif';
-    input.onchange = async (e) => {
-      const file = e.target.files?.[0];
-      if (file) {
-        const url = await handleImageUpload(file);
-        if (url && editor) {
-          editor.chain().focus().setImage({ src: url, width: '50%', align: 'left' }).run();
-        }
-      }
-    };
-    input.click();
-  }, [editor, handleImageUpload, imageCount]);
-
-  const setLink = useCallback(() => {
-    if (!editor) return;
-    
-    const previousUrl = editor.getAttributes('link').href;
-    const url = window.prompt('URL', previousUrl);
-    
-    if (url === null) return;
-    
-    if (url === '') {
-      editor.chain().focus().extendMarkRange('link').unsetLink().run();
-      return;
-    }
-    
-    editor.chain().focus().extendMarkRange('link').setLink({ href: url }).run();
-  }, [editor]);
-
-  const resizeImage = useCallback((width) => {
-    if (!editor) return;
-    const sizes = ['25%', '50%', '75%', '100%'];
-    const currentIndex = sizes.indexOf(width) || 0;
-    const nextSize = sizes[(currentIndex + 1) % sizes.length];
-    editor.chain().focus().updateAttributes('image', { width: nextSize }).run();
-  }, [editor]);
-
-  const alignImage = useCallback((align) => {
-    if (!editor) return;
-    editor.chain().focus().updateAttributes('image', { align }).run();
-  }, [editor]);
-
-  if (!editor) return null;
-
-  const toolbarButtons = [
-    { icon: <strong>B</strong>, action: () => editor.chain().focus().toggleBold().run(), active: editor.isActive('bold'), title: 'Negrito' },
-    { icon: <em>I</em>, action: () => editor.chain().focus().toggleItalic().run(), active: editor.isActive('italic'), title: 'Itálico' },
-    { icon: <s>S</s>, action: () => editor.chain().focus().toggleStrike().run(), active: editor.isActive('strike'), title: 'Tachado' },
-    { divider: true },
-    { icon: '•', action: () => editor.chain().focus().toggleBulletList().run(), active: editor.isActive('bulletList'), title: 'Lista' },
-    { icon: '1.', action: () => editor.chain().focus().toggleOrderedList().run(), active: editor.isActive('orderedList'), title: 'Lista Numerada' },
-    { divider: true },
-    { icon: '🔗', action: setLink, active: editor.isActive('link'), title: 'Link' },
-    { icon: '🖼️', action: addImage, title: 'Inserir Imagem' },
-    { icon: '⬅', action: () => { 
-      const { selection } = editor.state;
-      const node = selection.$from.nodeAfter;
-      if (node && node.type.name === 'image') {
-        editor.chain().focus().updateAttributes('image', { align: 'left', width: '45%' }).run();
-      }
-    }, title: 'Imagem à Esquerda' },
-    { icon: '➡', action: () => { 
-      const { selection } = editor.state;
-      const node = selection.$from.nodeAfter;
-      if (node && node.type.name === 'image') {
-        editor.chain().focus().updateAttributes('image', { align: 'right', width: '45%' }).run();
-      }
-    }, title: 'Imagem à Direita' },
-    { divider: true },
-    { icon: '─', action: () => editor.chain().focus().setHorizontalRule().run(), title: 'Linha Horizontal' },
-  ];
+  if (!editor) {
+    return <div>Carregando editor...</div>;
+  }
 
   return (
-    <div className="rich-editor">
+    <div className="rich-text-editor">
       {editable && (
-        <div className="rich-editor__toolbar">
-          {toolbarButtons.map((btn, i) => 
-            btn.divider ? (
-              <span key={i} className="rich-editor__divider" />
-            ) : (
-              <button
-                key={i}
-                type="button"
-                onClick={btn.action}
-                className={`rich-editor__btn ${btn.active ? 'rich-editor__btn--active' : ''}`}
-                title={btn.title}
-              >
-                {btn.icon}
-              </button>
-            )
-          )}
+        <div className="rich-text-editor__toolbar">
+          <button
+            type="button"
+            onClick={() => editor.chain().focus().toggleBold().run()}
+            className={`toolbar-btn ${editor.isActive('bold') ? 'toolbar-btn--active' : ''}`}
+            title="Negrito"
+          >
+            <b>B</b>
+          </button>
+          <button
+            type="button"
+            onClick={() => editor.chain().focus().toggleItalic().run()}
+            className={`toolbar-btn ${editor.isActive('italic') ? 'toolbar-btn--active' : ''}`}
+            title="Itálico"
+          >
+            <i>I</i>
+          </button>
+          <button
+            type="button"
+            onClick={() => editor.chain().focus().toggleStrike().run()}
+            className={`toolbar-btn ${editor.isActive('strike') ? 'toolbar-btn--active' : ''}`}
+            title="Tachado"
+          >
+            <s>S</s>
+          </button>
+          
+          <div className="toolbar-divider" />
+          
+          <button
+            type="button"
+            onClick={() => {
+              const url = window.prompt('Digite a URL do link:');
+              if (url) {
+                editor.chain().focus().setLink({ href: url }).run();
+              }
+            }}
+            className={`toolbar-btn ${editor.isActive('link') ? 'toolbar-btn--active' : ''}`}
+            title="Adicionar Link"
+          >
+            🔗
+          </button>
+          
+          <div className="toolbar-divider" />
+          
+          <label className="toolbar-btn toolbar-btn--image" title="Adicionar Imagem">
+            {uploading ? '⏳' : '📷'}
+            <input
+              type="file"
+              accept={ALLOWED_TYPES.join(',')}
+              onChange={handleFileInput}
+              style={{ display: 'none' }}
+            />
+          </label>
+          
+          <button
+            type="button"
+            onClick={() => editor.chain().focus().undo().run()}
+            className="toolbar-btn"
+            title="Desfazer"
+            disabled={!editor.can().undo()}
+          >
+            ↩️
+          </button>
+          <button
+            type="button"
+            onClick={() => editor.chain().focus().redo().run()}
+            className="toolbar-btn"
+            title="Refazer"
+            disabled={!editor.can().redo()}
+          >
+            ↪️
+          </button>
         </div>
       )}
-      
+
       <div 
-        className="rich-editor__content"
-        onPaste={handlePaste}
+        className="rich-text-editor__content"
         onDrop={handleDrop}
-        onDragOver={(e) => e.preventDefault()}
+        onDragOver={handleDragOver}
       >
         <EditorContent editor={editor} />
       </div>
-      
-      {editable && (
-        <div className="rich-editor__footer">
-          {error && (
-            <div className="rich-editor__error">{error}</div>
-          )}
-          {uploading && (
-            <div className="rich-editor__uploading">
-              <span className="rich-editor__spinner" /> Enviando imagem...
-            </div>
-          )}
-          <div className="rich-editor__info">
-            <span className="rich-editor__types" title="Formatos aceitos">
-              PNG, JPEG, WebP, GIF
-            </span>
-            <span className="rich-editor__limits">
-              {imageCount}/{MAX_IMAGES} imagens
-            </span>
-          </div>
-        </div>
-      )}
+
+      <div className="rich-text-editor__footer">
+        {error && <span className="rich-text-editor__error">{error}</span>}
+        <span className="rich-text-editor__counter">
+          {stripHtml(editor.getHTML()).length}/{MAX_CHARS} | Imagens: {imageCount}/{MAX_IMAGES}
+        </span>
+      </div>
     </div>
   );
 }

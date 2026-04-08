@@ -1,8 +1,10 @@
 import React, { useState, useEffect } from 'react';
 import { topicService } from '../services/topicService';
 import { gamificationService } from '../services/gamificationService';
+import { sanitizeHtml } from '../utils/sanitize';
+import { SpoilerRenderer } from './SpoilerRenderer';
 
-export function Home({ user, onViewTopic, onShowRanking, onShowWorks, onNewTopic }) {
+export function Home({ user, onViewTopic, onShowRanking, onShowWorks, onShowLetters, onNewTopic }) {
   const [stats, setStats] = useState(null);
   const [recentTopics, setRecentTopics] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -92,7 +94,7 @@ export function Home({ user, onViewTopic, onShowRanking, onShowWorks, onNewTopic
                   </div>
                   <h3 className="home__topic-title">{topic.title}</h3>
                   <p className="home__topic-preview">
-                    {topic.content.substring(0, 100)}{topic.content.length > 100 ? '...' : ''}
+                    <SpoilerRenderer content={topic.content} />
                   </p>
                   <div className="home__topic-footer">
                     {topic.work && (
@@ -123,6 +125,10 @@ export function Home({ user, onViewTopic, onShowRanking, onShowWorks, onNewTopic
               <button className="home__action-btn" onClick={onShowRanking}>
                 <span className="home__action-icon">🏆</span>
                 <span>Ranking</span>
+              </button>
+              <button className="home__action-btn" onClick={onShowLetters}>
+                <span className="home__action-icon">🔤</span>
+                <span>A-Z</span>
               </button>
             </div>
           </div>

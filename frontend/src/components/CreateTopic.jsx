@@ -1,10 +1,10 @@
-import React, { useState, useEffect, useImperativeHandle, forwardRef } from "react";
+import React, { useState, useEffect, useImperativeHandle, forwardRef, useRef } from "react";
+import { useInfiniteQuery } from "@tanstack/react-query";
 import { workService } from "../services/workService";
 import { topicService } from "../services/topicService";
 import { RichTextEditor } from "./RichTextEditor";
 
 export const CreateTopic = forwardRef(({ onTopicCreated }, ref) => {
-    const [works, setWorks] = useState([]);
     const [showNewWorkForm, setShowNewWorkForm] = useState(false);
     const [formData, setFormData] = useState({
         title: '',
@@ -18,9 +18,50 @@ export const CreateTopic = forwardRef(({ onTopicCreated }, ref) => {
         type: 'book',
         canonical_url: ''
     });
+    const [workSearch, setWorkSearch] = useState('');
+    const [showWorkDropdown, setShowWorkDropdown] = useState(false);
+    const searchRef = useRef(null);
+    const dropdownRef = useRef(null);
 
+    // Use React Query for works with search and infinite scroll
+    const {
+        data: worksData,
+        isLoading,
+        fetchNextPage,
+        hasNextPage,
+        isFetchingNextPage,
+    } = useInfiniteQuery({
+        queryKey: ['works', 'list', workSearch],
+        queryFn: ({ pageParam = 1 }) => workService.list({
+            pageParam,
+            search: workSearch,
+            type: null
+        }),
+        getNextPageParam: (lastPage) => lastPage.nextPage,
+        staleTime: 5 * 60 * 1000,
+    });
+
+    // Combine all pages into single array
+    const works = worksData?.pages?.flatMap(page => page.data) || [];
+    const totalWorks = worksData?.pages?.[0]?.total || 0;
+
+    // Scroll handler for dropdown
+    const handleDropdownScroll = (e) => {
+        const { scrollTop, scrollHeight, clientHeight } = e.target;
+        if (scrollHeight - scrollTop - clientHeight < 50 && hasNextPage && !isFetchingNextPage) {
+            fetchNextPage();
+        }
+    };
+
+    // Close dropdown when clicking outside
     useEffect(() => {
-        loadWorks();
+        const handleClickOutside = (e) => {
+            if (searchRef.current && !searchRef.current.contains(e.target)) {
+                setShowWorkDropdown(false);
+            }
+        };
+        document.addEventListener('mousedown', handleClickOutside);
+        return () => document.removeEventListener('mousedown', handleClickOutside);
     }, []);
 
     useImperativeHandle(ref, () => ({
@@ -29,20 +70,9 @@ export const CreateTopic = forwardRef(({ onTopicCreated }, ref) => {
         }
     }));
 
-    const loadWorks = async () => {
-        try {
-            const data = await workService.getAll();
-            setWorks(Array.isArray(data) ? data : []);
-        } catch (error) {
-            console.error("Erro ao carregar obras:", error);
-            setWorks([]);
-        }
-    };
-
     const handleCreateWork = async () => {
         try {
             const newWork = await workService.create(newWorkData);
-            setWorks(prev => [...prev, newWork]);
             setFormData(prev => ({ ...prev, work_id: newWork.id }));
             setShowNewWorkForm(false);
             setNewWorkData({ title: '', description: '', type: 'book', canonical_url: '' });
@@ -69,6 +99,8 @@ export const CreateTopic = forwardRef(({ onTopicCreated }, ref) => {
         }
     };
 
+    const selectedWork = works.find(w => w.id === formData.work_id);
+
     return (
         <form onSubmit={handleSubmit} className="create-topic card">
             <h3 className="create-topic__title">✏️ Nova Experiência</h3>
@@ -76,17 +108,66 @@ export const CreateTopic = forwardRef(({ onTopicCreated }, ref) => {
             <div className="form-group">
                 <label className="form-label">Obra Relacionada</label>
                 <div className="create-topic__work-row">
-                    <select
-                        className="form-control"
-                        value={formData.work_id}
-                        onChange={e => setFormData({...formData, work_id: e.target.value})}
-                        disabled={showNewWorkForm}
-                    >
-                        <option value="">Selecione uma obra...</option>
-                        {works.map(work => (
-                            <option key={work.id} value={work.id}>{work.title}</option>
-                        ))}
-                    </select>
+                    <div className="create-topic__work-select" ref={searchRef}>
+                        <input
+                            type="text"
+                            className="form-control"
+                            placeholder={selectedWork ? selectedWork.title : "Buscar obra..."}
+                            value={workSearch}
+                            onChange={(e) => {
+                                setWorkSearch(e.target.value);
+                                setShowWorkDropdown(true);
+                            }}
+                            onFocus={() => setShowWorkDropdown(true)}
+                            disabled={showNewWorkForm}
+                        />
+                        {showWorkDropdown && !showNewWorkForm && (
+                            <div 
+                                className="create-topic__work-dropdown" 
+                                ref={dropdownRef}
+                                onScroll={handleDropdownScroll}
+                            >
+                                {isLoading && works.length === 0 ? (
+                                    <div className="create-topic__work-loading">
+                                        <div className="spinner" />
+                                        <span>Buscando...</span>
+                                    </div>
+                                ) : works.length > 0 ? (
+                                    <>
+                                        {works.map(work => (
+                                            <div
+                                                key={work.id}
+                                                className="create-topic__work-option"
+                                                onClick={() => {
+                                                    setFormData({ ...formData, work_id: work.id });
+                                                    setWorkSearch('');
+                                                    setShowWorkDropdown(false);
+                                                }}
+                                            >
+                                                <span className="create-topic__work-type">{work.type}</span>
+                                                <span className="create-topic__work-title">{work.title}</span>
+                                            </div>
+                                        ))}
+                                        {isFetchingNextPage && (
+                                            <div className="create-topic__work-loading">
+                                                <div className="spinner" />
+                                                <span>Carregando mais...</span>
+                                            </div>
+                                        )}
+                                        {!hasNextPage && works.length > 0 && (
+                                            <div className="create-topic__work-hint">
+                                                {totalWorks} obras encontradas
+                                            </div>
+                                        )}
+                                    </>
+                                ) : (
+                                    <div className="create-topic__work-empty">
+                                        Nenhuma obra encontrada
+                                    </div>
+                                )}
+                            </div>
+                        )}
+                    </div>
                     <button
                         type="button"
                         onClick={() => setShowNewWorkForm(!showNewWorkForm)}

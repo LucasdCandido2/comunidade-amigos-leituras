@@ -48,10 +48,28 @@ class AssetController extends Controller
 
     public function uploadInline(Request $request): JsonResponse
     {
-        $request->validate([
+        \Illuminate\Support\Facades\Log::info('uploadInline request', [
+            'has_file' => $request->hasFile('file'),
+            'file' => $request->file('file'),
+            'all' => $request->all(),
+            'all_files' => $request->allFiles(),
+            'headers' => $request->headers->get('Content-Type'),
+        ]);
+        
+        $data = array_merge($request->all(), $request->allFiles());
+        
+        $validator = \Illuminate\Support\Facades\Validator::make($data, [
             'file' => 'required|file|mimes:jpeg,jpg,png,gif,webp|max:5120',
         ]);
 
+        if ($validator->fails()) {
+            \Illuminate\Support\Facades\Log::error('Validation failed', $validator->errors()->toArray());
+            return response()->json([
+                'message' => 'Validação falhou',
+                'errors' => $validator->errors()->toArray(),
+            ], 422);
+        }
+        
         try {
             $asset = $this->assetService->uploadInlineImage(
                 $request->file('file'),

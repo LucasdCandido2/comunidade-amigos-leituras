@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useMemo, useCallback, Suspense, lazy } from 'react';
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { ThemeToggle } from './components/ThemeToggle';
 import { NotificationBell } from './components/NotificationBell';
 import { SearchBar } from './components/SearchBar';
@@ -10,17 +11,30 @@ import { Register } from './components/Register';
 import { Home } from './components/Home';
 import { TopicDetail } from './components/TopicDetail';
 import { WorksRanking } from './components/WorksRanking';
+import { WorksByLetter } from './components/WorksByLetter';
 import { WorkEditor } from './components/WorkEditor';
 import { UserProfile } from './components/UserProfile';
 import { WikiSources } from './components/WikiSources';
 import { CreateTopic } from './components/CreateTopic';
 import { RoleManagement } from './components/RoleManagement';
 
+const queryClient = new QueryClient({
+  defaultOptions: {
+    queries: {
+      staleTime: 5 * 60 * 1000,
+      gcTime: 10 * 60 * 1000,
+      refetchOnWindowFocus: false,
+      retry: 1,
+    },
+  },
+});
+
 const ViewState = {
   HOME: 'home',
   TOPIC: 'topic',
   RANKING: 'ranking',
   WORKS: 'works',
+  LETTERS: 'letters',
   PROFILE: 'profile',
   WIKI: 'wiki',
   ADMIN: 'admin',
@@ -132,7 +146,11 @@ function useAppViewModel() {
     setCurrentView(ViewState.HOME);
   }, []);
 
-  const isAdminVisible = useMemo(() => user?.roles?.[0]?.name === 'owner', [user]);
+  const isAdminVisible = useMemo(() => {
+    if (!user) return false;
+    const userRoles = user.roles?.map(r => r.name) || [];
+    return userRoles.includes('owner') || userRoles.includes('admin') || userRoles.includes('moderator');
+  }, [user]);
   const isHomeActive = useMemo(() => currentView === ViewState.HOME && !selectedTopicId, [currentView, selectedTopicId]);
 
   return {
@@ -203,6 +221,8 @@ function App() {
     switch (currentView) {
       case ViewState.RANKING:
         return <WorksRanking onBack={() => navigate(ViewState.HOME)} />;
+      case ViewState.LETTERS:
+        return <WorksByLetter onBack={() => navigate(ViewState.HOME)} />;
       case ViewState.WORKS:
         return <WorkEditor onWorkSaved={handleWorkSaved} onCancel={() => navigate(ViewState.HOME)} />;
       case ViewState.PROFILE:
@@ -214,7 +234,7 @@ function App() {
       default:
         return (
           <>
-            <Home user={user} onViewTopic={(id) => navigate(ViewState.TOPIC, { topicId: id })} onShowRanking={() => navigate(ViewState.RANKING)} onShowWorks={() => navigate(ViewState.WORKS)} onNewTopic={() => createTopicRef.current?.focus()} />
+            <Home user={user} onViewTopic={(id) => navigate(ViewState.TOPIC, { topicId: id })} onShowRanking={() => navigate(ViewState.RANKING)} onShowWorks={() => navigate(ViewState.WORKS)} onShowLetters={() => navigate(ViewState.LETTERS)} onNewTopic={() => createTopicRef.current?.focus()} />
             <div style={{ marginTop: 'var(--space-8)' }}>
               <CreateTopic ref={createTopicRef} onTopicCreated={handleTopicCreated} />
               <hr className="divider" />
@@ -230,31 +250,33 @@ function App() {
   };
 
   return (
-    <div style={{ minHeight: '100svh', display: 'flex', flexDirection: 'column', background: 'var(--color-bg)' }}>
-      <nav className="navbar">
-        <div className="navbar__inner">
-          <button className="navbar__brand navbar__brand--button" onClick={() => navigate(ViewState.HOME)}>📚 Amigos Leituras</button>
-          <div className="navbar__actions">
-            <button onClick={() => navigate(ViewState.HOME)} className={`btn btn--sm ${isHomeActive ? 'btn--primary' : 'btn--ghost'}`}>🏠 Início</button>
-            <button onClick={() => navigate(ViewState.WORKS)} className={`btn btn--sm ${currentView === ViewState.WORKS ? 'btn--primary' : 'btn--ghost'}`}>📖 Obras</button>
-            <button onClick={() => navigate(ViewState.RANKING)} className={`btn btn--sm ${currentView === ViewState.RANKING ? 'btn--primary' : 'btn--ghost'}`}>🏆 Ranking</button>
-            <button onClick={() => navigate(ViewState.WIKI)} className={`btn btn--sm ${currentView === ViewState.WIKI ? 'btn--primary' : 'btn--ghost'}`}>🔗 Wiki</button>
-            {isAdminVisible && <button onClick={() => navigate(ViewState.ADMIN)} className={`btn btn--sm ${currentView === ViewState.ADMIN ? 'btn--primary' : 'btn--ghost'}`}>⚙️ Admin</button>}
-            <div style={{ width: '1px', background: 'var(--color-border)', height: '20px', margin: '0 var(--space-1)' }} />
-            <ThemeToggle variant="icon" />
-            <SearchBar onSelect={(item) => { if (item.type === 'topic') navigate(ViewState.TOPIC, { topicId: item.id }); }} />
-            <NotificationBell user={user} />
-            <button onClick={() => navigate(ViewState.PROFILE)} className="btn btn--sm btn--ghost navbar__profile-btn">
-              👤 {user.name} {user.roles?.[0] && <span style={{ opacity: 0.7, fontSize: '0.85em' }}>({user.roles[0].display_name})</span>}
-            </button>
-            <button onClick={handleLogout} className="btn btn--sm btn--ghost">Sair</button>
+    <QueryClientProvider client={queryClient}>
+      <div style={{ minHeight: '100svh', display: 'flex', flexDirection: 'column', background: 'var(--color-bg)' }}>
+        <nav className="navbar">
+          <div className="navbar__inner">
+            <button className="navbar__brand navbar__brand--button" onClick={() => navigate(ViewState.HOME)}>📚 Amigos Leituras</button>
+            <div className="navbar__actions">
+              <button onClick={() => navigate(ViewState.HOME)} className={`btn btn--sm ${isHomeActive ? 'btn--primary' : 'btn--ghost'}`}>🏠 Início</button>
+              <button onClick={() => navigate(ViewState.WORKS)} className={`btn btn--sm ${currentView === ViewState.WORKS ? 'btn--primary' : 'btn--ghost'}`}>📖 Obras</button>
+              <button onClick={() => navigate(ViewState.RANKING)} className={`btn btn--sm ${currentView === ViewState.RANKING ? 'btn--primary' : 'btn--ghost'}`}>🏆 Ranking</button>
+              <button onClick={() => navigate(ViewState.WIKI)} className={`btn btn--sm ${currentView === ViewState.WIKI ? 'btn--primary' : 'btn--ghost'}`}>🔗 Wiki</button>
+              {isAdminVisible && <button onClick={() => navigate(ViewState.ADMIN)} className={`btn btn--sm ${currentView === ViewState.ADMIN ? 'btn--primary' : 'btn--ghost'}`}>⚙️ Admin</button>}
+              <div style={{ width: '1px', background: 'var(--color-border)', height: '20px', margin: '0 var(--space-1)' }} />
+              <ThemeToggle variant="icon" />
+              <SearchBar onSelect={(item) => { if (item.type === 'topic') navigate(ViewState.TOPIC, { topicId: item.id }); }} />
+              <NotificationBell user={user} />
+              <button onClick={() => navigate(ViewState.PROFILE)} className="btn btn--sm btn--ghost navbar__profile-btn">
+                👤 {user.name} {user.roles?.[0] && <span style={{ opacity: 0.7, fontSize: '0.85em' }}>({user.roles[0].display_name})</span>}
+              </button>
+              <button onClick={handleLogout} className="btn btn--sm btn--ghost">Sair</button>
+            </div>
           </div>
-        </div>
-      </nav>
-      <main style={{ flex: 1, maxWidth: 'var(--container-xl)', width: '100%', margin: '0 auto', padding: 'var(--space-8) var(--space-6)' }}>
-        {renderContent()}
-      </main>
-    </div>
+        </nav>
+        <main style={{ flex: 1, maxWidth: 'var(--container-xl)', width: '100%', margin: '0 auto', padding: 'var(--space-8) var(--space-6)' }}>
+          {renderContent()}
+        </main>
+      </div>
+    </QueryClientProvider>
   );
 }
 

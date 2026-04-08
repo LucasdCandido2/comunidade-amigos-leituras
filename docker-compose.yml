@@ -7,11 +7,11 @@ services:
     container_name: comunidade_app
     restart: unless-stopped
     working_dir: /var/www
+    command: php-fpm
     volumes:
       - ./backend:/var/www
-      # Permite que o container escreva logs e cache
-      - /var/www/storage
-      - /var/www/bootstrap/cache
+      - app_storage:/var/www/storage
+      - app_cache:/var/www/bootstrap/cache
     networks:
       - comunidade_net
     depends_on:
@@ -95,3 +95,5 @@ networks:
 
 volumes:
   db_data:
+  app_storage:
+  app_cache:

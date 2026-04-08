@@ -2,69 +2,76 @@ import React, { useState, useEffect, useRef } from "react";
 import { topicService } from "../services/topicService";
 import { interactionService } from "../services/interactionService";
 import { assetService } from "../services/assetService";
-import { SpoilerText, processSpoilerTags } from "./SpoilerTag";
 import { RichTextEditor } from "./RichTextEditor";
 import { sanitizeHtml } from "../utils/sanitize";
+import { SpoilerRenderer } from "./SpoilerRenderer";
 
-function SpoilerContent({ html }) {
-    const [spoilers, setSpoilers] = useState({});
+function TopicContent({ html }) {
+    const [revealedSpoilers, setRevealedSpoilers] = useState({});
     
-    const toggleSpoiler = (id) => {
-        setSpoilers(prev => ({ ...prev, [id]: !prev[id] }));
+    const toggleSpoiler = (index) => {
+        setRevealedSpoilers(prev => ({
+            ...prev,
+            [index]: !prev[index]
+        }));
     };
     
     const processContent = (content) => {
         const spoilerRegex = /\[spoiler\](.*?)\[\/spoiler\]/gs;
         const parts = [];
-        let lastIndex = 0;
         let match;
-        let spoilerIndex = 0;
+        let index = 0;
         
         while ((match = spoilerRegex.exec(content)) !== null) {
-            if (match.index > lastIndex) {
-                parts.push({
-                    type: 'text',
-                    content: content.slice(lastIndex, match.index),
-                });
-            }
-            
-            const spoilerId = `spoiler-${spoilerIndex}`;
             parts.push({
                 type: 'spoiler',
-                id: spoilerId,
-                content: match[1],
+                index: index,
+                content: match[1]
             });
-            
-            spoilerIndex++;
-            lastIndex = match.index + match[0].length;
+            index++;
         }
+        
+        if (parts.length === 0) {
+            return <div dangerouslySetInnerHTML={{ __html: sanitizeHtml(content) }} />;
+        }
+        
+        let lastIndex = 0;
+        const elements = [];
+        
+        parts.forEach((part) => {
+            const textBeforeStart = content.indexOf('[spoiler]', lastIndex);
+            if (textBeforeStart > lastIndex) {
+                const textBefore = content.slice(lastIndex, textBeforeStart);
+                elements.push(
+                    <span key={`text-${part.index}`} dangerouslySetInnerHTML={{ __html: sanitizeHtml(textBefore) }} />
+                );
+            }
+            
+            const isRevealed = revealedSpoilers[part.index];
+            elements.push(
+                <span 
+                    key={`spoiler-${part.index}`}
+                    className="spoiler-tag"
+                    onClick={() => toggleSpoiler(part.index)}
+                    data-spoiler={isRevealed ? 'revealed' : 'hidden'}
+                >
+                    {isRevealed ? part.content : '⚠️ Spoiler'}
+                </span>
+            );
+            
+            lastIndex = content.indexOf('[/spoiler]', lastIndex) + '[/spoiler]'.length;
+        });
         
         if (lastIndex < content.length) {
-            parts.push({
-                type: 'text',
-                content: content.slice(lastIndex),
-            });
+            elements.push(
+                <span key="text-end" dangerouslySetInnerHTML={{ __html: sanitizeHtml(content.slice(lastIndex)) }} />
+            );
         }
         
-        return parts;
+        return <div>{elements}</div>;
     };
     
-    const handleClick = (e) => {
-        const target = e.target.closest('.spoiler-tag');
-        if (target && target.dataset.spoilerId) {
-            toggleSpoiler(target.dataset.spoilerId);
-        }
-    };
-    
-    const processedHtml = processSpoilerTags(html);
-    
-    return (
-        <div 
-            className="spoiler-content-wrapper"
-            onClick={handleClick}
-            dangerouslySetInnerHTML={{ __html: processedHtml }} 
-        />
-    );
+    return <div className="topic-content">{processContent(html)}</div>;
 }
 
 export function TopicDetail({ topicId, user, onBack, onTopicDeleted }) {
@@ -355,7 +362,7 @@ export function TopicDetail({ topicId, user, onBack, onTopicDeleted }) {
                         )}
 
                         <div className="topic-detail__content rich-content">
-                            <div dangerouslySetInnerHTML={{ __html: sanitizeHtml(topic.content) }} />
+                            <TopicContent html={topic.content} />
                         </div>
 
                         {topic.rating && (
@@ -459,7 +466,7 @@ export function TopicDetail({ topicId, user, onBack, onTopicDeleted }) {
                                                     ⭐ {interaction.rating}/5
                                                 </span>
                                             )}
-                                            <div dangerouslySetInnerHTML={{ __html: sanitizeHtml(interaction.content) }} />
+                                            <SpoilerRenderer content={interaction.content} interactive={true} />
                                         </div>
                                         <span className="chat-bubble__time">
                                             {formatTime(interaction.created_at)}

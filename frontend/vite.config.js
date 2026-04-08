@@ -11,8 +11,6 @@ export default defineConfig({
       usePolling: true,
     },
     proxy: {
-      // Toda chamada a /api é encaminhada internamente para o backend
-      // O browser só enxerga localhost:3000 — sem cross-origin, sem preflight
       '/api': {
         target: 'http://web:80',
         changeOrigin: true,

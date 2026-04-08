@@ -1,0 +1,81 @@
+# Docker Compose de referência para Railway
+# Este arquivo serve como documentação. No Railway, cada serviço
+# deve ser criado manualmente conforme mapeamento abaixo.
+#
+# Para deploy no Railway, siga as instruções em DEPLOY.md
+
+version: '3.8'
+
+services:
+  # Backend Laravel/PHP
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: comunidade_backend
+    environment:
+      - APP_ENV=production
+      - APP_DEBUG=false
+    volumes:
+      - ./backend:/var/www
+      - backend_storage:/var/www/storage
+
+  # Servidor Web Nginx
+  web:
+    image: nginx:alpine
+    container_name: comunidade_web
+    ports:
+      - "8000:80"
+    volumes:
+      - ./backend:/var/www
+      - ./docker/nginx/default.conf:/etc/nginx/conf.d/default.conf
+    depends_on:
+      - backend
+
+  # Banco de dados PostgreSQL
+  # NO RAILWAY: Use o serviço gerenciado PostgreSQL
+  db:
+    image: postgres:15-alpine
+    container_name: comunidade_db
+    environment:
+      POSTGRES_DB: comunidade_db
+      POSTGRES_USER: user_admin
+      POSTGRES_PASSWORD: password_secret
+    volumes:
+      - db_data:/var/lib/postgresql/data
+
+  # Redis para cache/sessões
+  # NO RAILWAY: Use o serviço gerenciado Redis
+  redis:
+    image: redis:alpine
+    container_name: comunidade_redis
+
+  # Frontend React/Vite
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    container_name: comunidade_frontend
+    ports:
+      - "3000:3000"
+    environment:
+      - NODE_ENV=production
+
+volumes:
+  backend_storage:
+  db_data:
+
+# REDE AUTOMÁTICA NO RAILWAY
+# No Railway, não é necessário definir networks. A rede privada
+# é automática entre todos os serviços do projeto.
+
+# MAPEAMENTO PARA RAILWAY:
+# ========================
+# docker-compose service    → Railway Service
+# backend                   → Backend (GitHub Repo + Dockerfile)
+# web                       → Nginx (Docker Image ou GitHub Repo)
+# db (postgres)             → PostgreSQL (Managed Database)
+# redis                     → Redis (Managed Database)
+# frontend                  → Frontend (GitHub Repo + Dockerfile)
+#
+# Para mais detalhes, consulte DEPLOY.md

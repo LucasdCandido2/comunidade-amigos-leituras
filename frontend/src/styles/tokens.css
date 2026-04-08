@@ -83,6 +83,7 @@
   --color-bg:            var(--palette-gray-50);
   --color-bg-elevated:   var(--palette-gray-0);
   --color-bg-sunken:     var(--palette-gray-100);
+  --color-bg-raised:     var(--palette-gray-100);
   --color-bg-overlay:    rgba(0, 0, 0, 0.04);
 
   /* Textos */
@@ -159,6 +160,7 @@
   --color-bg:            #0f1117;
   --color-bg-elevated:   #1a1d27;
   --color-bg-sunken:     #0a0c12;
+  --color-bg-raised:     #252a38;
   --color-bg-overlay:    rgba(255,255,255,0.04);
 
   /* Textos */

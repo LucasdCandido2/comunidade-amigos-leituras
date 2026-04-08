@@ -1,10 +1,15 @@
 import React, { useMemo } from 'react';
-import { truncateHtml } from '../utils/sanitize';
+import { sanitizeHtml } from '../utils/sanitize';
+import { SpoilerRenderer } from './SpoilerRenderer';
 
 export const TopicsList = React.memo(function TopicsList({ topics, user, onViewTopic }) {
   const sortedTopics = useMemo(() => {
     return [...topics].sort((a, b) => new Date(b.created_at) - new Date(a.created_at));
   }, [topics]);
+
+  const renderContent = (content) => {
+    return <SpoilerRenderer content={content} />;
+  };
 
   if (topics.length === 0) {
     return (
@@ -40,7 +45,9 @@ export const TopicsList = React.memo(function TopicsList({ topics, user, onViewT
             
             <h3 className="topics-list__title">{topic.title}</h3>
             
-            <p className="topics-list__preview" dangerouslySetInnerHTML={{ __html: truncateHtml(topic.content, 100) }} />
+            <div className="topics-list__preview" style={{ minHeight: '40px' }}>
+              {renderContent(topic.content)}
+            </div>
             
             <div className="topics-list__meta">
               {topic.work && (

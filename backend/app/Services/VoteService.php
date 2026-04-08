@@ -68,14 +68,12 @@ class VoteService
 
     public static function getVoteCount(string $votableType, int $votableId): int
     {
-        return Vote::where('votable_type', $votableType)
+        $result = Vote::where('votable_type', $votableType)
             ->where('votable_id', $votableId)
-            ->where('is_upvote', true)
-            ->count()
-            - Vote::where('votable_type', $votableType)
-            ->where('votable_id', $votableId)
-            ->where('is_upvote', false)
-            ->count();
+            ->selectRaw('SUM(CASE WHEN is_upvote = true THEN 1 ELSE -1 END) as vote_sum')
+            ->first();
+
+        return (int) ($result->vote_sum ?? 0);
     }
 
     public static function getUserVote(int $userId, string $votableType, int $votableId): ?bool

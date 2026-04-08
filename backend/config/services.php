@@ -31,4 +31,25 @@ return [
         'region' => env('AWS_DEFAULT_REGION', 'us-east-1'),
     ],
 
+    'tmdb' => [
+        'api_key' => env('TMDB_API_KEY', ''),
+    ],
+
+    'anilist' => [
+        'client_id' => env('ANILIST_CLIENT_ID', ''),
+        'client_secret' => env('ANILIST_CLIENT_SECRET', ''),
+    ],
+
+    'kitsu' => [
+        'api_key' => env('KITSU_API_KEY', ''),
+    ],
+
+    'omdb' => [
+        'api_key' => env('OMDB_API_KEY', ''),
+    ],
+
+    'comicvine' => [
+        'api_key' => env('COMICVINE_API_KEY', ''),
+    ],
+
 ];

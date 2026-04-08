@@ -38,6 +38,9 @@ RUN docker-php-ext-install -j$(nproc) \
     zip \
     intl
 
+# Instala extensão Redis
+RUN pecl install redis && docker-php-ext-enable redis
+
 # Instala Composer
 COPY --from=composer:2 /usr/bin/composer /usr/bin/composer
 
@@ -53,7 +56,7 @@ RUN mkdir -p /var/www/storage /var/www/bootstrap/cache
 RUN chown -R www-data:www-data /var/www/storage /var/www/bootstrap
 RUN chmod -R 775 /var/www/storage /var/www/bootstrap
 
-# Copia configuração PHP de desenvolvimento (desabilita OPcache para evitar SIGSEGV)
+# Copia configuração PHP de desenvolvimento
 COPY docker/php/php-dev.ini /usr/local/etc/php/conf.d/99-dev.ini
 
 # Alterna para o usuário não-root

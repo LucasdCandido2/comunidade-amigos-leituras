@@ -5,6 +5,8 @@ namespace App\Models;
 use App\Services\RankingService;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\SoftDeletes;
 
@@ -16,10 +18,16 @@ class Work extends Model
         'title',
         'description',
         'type',
+        'classification',
         'canonical_url',
         'is_user_suggested',
         'bayesian_rating',
-        'user_id'
+        'user_id',
+        'external_source_id',
+        'external_id',
+        'external_url',
+        'cover_image_url',
+        'external_references',
     ];
 
     protected $casts = [
@@ -31,15 +39,23 @@ class Work extends Model
         return $this->HasMany(Topic::class);
     }
 
-    public function user()
+    public function user(): BelongsTo
     {
         return $this->belongsTo(User::class);
     }
 
+    public function externalSource(): BelongsTo
+    {
+        return $this->belongsTo(ExternalSource::class);
+    }
+
+    public function categories(): BelongsToMany
+    {
+        return $this->belongsToMany(Category::class, 'category_work');
+    }
+
     public function getBayesianRatingAttribute()
     {
-        // Return stored rating without recalculation in getter
-        // Recalculation should be done explicitly via controller or scheduled job
         return $this->attributes['bayesian_rating'] ?? 0;
     }
 }
