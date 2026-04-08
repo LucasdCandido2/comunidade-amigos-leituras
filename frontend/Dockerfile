@@ -2,14 +2,14 @@ FROM node:20-alpine AS builder
 
 WORKDIR /app
 
-COPY frontend/package*.json ./
-COPY frontend/vite.config.js ./
+COPY package*.json ./
+COPY vite.config.js ./
 
 RUN npm install
 
-COPY frontend/src ./src
-COPY frontend/public ./public
-COPY frontend/index.html ./
+COPY src ./src
+COPY public ./public
+COPY index.html ./
 
 RUN npm run build
 
