@@ -15,9 +15,9 @@ class PopulateController extends Controller
         $limit = $request->get('limit', 50);
 
         $exitCode = Artisan::call("works:populate", [
-            '--source' => $source,
-            '--type' => $type,
-            '--limit' => $limit,
+            '--source=' => $source,
+            '--type=' => $type,
+            '--limit=' => $limit,
         ]);
 
         return response()->json([
@@ -29,15 +29,15 @@ class PopulateController extends Controller
 
     public function populateAll()
     {
-        $sources = [
-            ['source' => 'jikan', 'type' => 'anime', 'limit' => 50],
-            ['source' => 'jikan', 'type' => 'manga', 'limit' => 50],
-            ['source' => 'omdb', 'type' => 'movie', 'limit' => 30],
+        $configs = [
+            ['--source' => 'jikan', '--type' => 'anime', '--limit' => 50],
+            ['--source' => 'jikan', '--type' => 'manga', '--limit' => 50],
+            ['--source' => 'omdb', '--type' => 'movie', '--limit' => 30],
         ];
 
         $results = [];
 
-        foreach ($sources as $config) {
+        foreach ($configs as $config) {
             Artisan::call("works:populate", $config);
             $results[] = [
                 'config' => $config,
