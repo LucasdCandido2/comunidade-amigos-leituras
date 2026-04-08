@@ -79,13 +79,6 @@ export function Login({ onLogin }) {
                         )}
                     </button>
                 </form>
-
-                <div className="auth-card__footer">
-                    <div className="auth-card__info">
-                        <span className="auth-card__info-icon">💡</span>
-                        <span>Use <code>teste1234@teste.com</code> e <code>teste12345</code> para testar</span>
-                    </div>
-                </div>
             </div>
         </div>
     );

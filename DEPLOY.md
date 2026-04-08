@@ -96,14 +96,14 @@ REDIS_HOST=${REDIS_HOST}
 REDIS_PORT=6379
 
 # Frontend URL (substitua pelo seu domínio do frontend)
-FRONTEND_URL=https://comunidade-amigos-leituras.up.railway.app
-SANCTUM_STATEFUL_DOMAINS=comunidade-amigos-leituras.up.railway.app
+FRONTEND_URL=https://outstanding-luck-production-1bba.up.railway.app
+SANCTUM_STATEFUL_DOMAINS=outstanding-luck-production-1bba.up.railway.app
 ```
 
 No serviço do **Frontend**, adicione:
 
 ```env
-VITE_API_URL=https://backend-seu-projeto.up.railway.app
+VITE_API_URL=https://comunidade-amigos-leituras-production.up.railway.app
 ```
 
 ### 4. Configurar Networking
