@@ -39,6 +39,7 @@ class Kernel extends HttpKernel
         ],
 
         'api' => [
+            \App\Http\Middleware\CorsMiddleware::class,
             'throttle:300,1',
             \Illuminate\Routing\Middleware\SubstituteBindings::class,
         ],
