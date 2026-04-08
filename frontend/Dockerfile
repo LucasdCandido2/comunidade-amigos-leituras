@@ -5,6 +5,9 @@ WORKDIR /app
 COPY package*.json ./
 COPY vite.config.js ./
 
+ARG VITE_API_URL
+ENV VITE_API_URL=$VITE_API_URL
+
 RUN npm install
 
 COPY src ./src

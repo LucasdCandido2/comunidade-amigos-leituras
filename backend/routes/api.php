@@ -15,6 +15,7 @@ use App\Http\Controllers\Api\PdfController;
 use App\Http\Controllers\Api\RoleController;
 use App\Http\Controllers\Api\UserController;
 use App\Http\Controllers\Api\RegistrationRequestController;
+use App\Http\Controllers\Api\PopulateController;
 
 Route::post('/register', [AuthController::class, 'register']);
 Route::post('/login', [AuthController::class, 'login']);
@@ -25,6 +26,12 @@ Route::get('/assets/{id}/signed', [AssetController::class, 'signedDownload'])->n
 Route::get('/leaderboard', [GamificationController::class, 'leaderboard']);
 Route::get('/badges', [GamificationController::class, 'allBadges']);
 Route::get('/topics/{id}/pdf', [PdfController::class, 'exportTopic']);
+
+// Populate (protegido por owner)
+Route::middleware('bearer')->group(function () {
+    Route::post('/populate', [PopulateController::class, 'populate']);
+    Route::post('/populate-all', [PopulateController::class, 'populateAll']);
+});
 
 // Busca em fontes externas (público)
 Route::get('/works/search', [WorkController::class, 'search']);
