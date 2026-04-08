@@ -3,64 +3,42 @@
 Using Detected Dockerfile
 =========================
 
-context: h83r-DRu8
+context: mvtm-X_3i
 
 internal
 load build definition from Dockerfile
 0ms
 
-internal
-load metadata for docker.io/library/node:20-alpine
-763ms
-
-internal
-load .dockerignore
-0ms
-
-internal
-load build context
+auth
+library/node:pull token for registry-1.docker.io
 0ms
 
 builder
 FROM docker.io/library/node:20-alpine@sha256:f598378b5240225e6beab68fa9f356db1fb8efe55173e6d4d8153113bb8f333c
 7ms
 
+internal
+load build context
+0ms
+
 builder
 WORKDIR /app cached
-1ms
-
-builder
-COPY frontend/src ./src cached
 0ms
 
 builder
-RUN npm install cached
+COPY frontend/src ./src
 0ms
 
 builder
-COPY frontend/package*.json ./ cached
+COPY frontend/vite.config.js ./ cached
 0ms
 
 builder
-COPY frontend/vite.config.js ./
+COPY frontend/public ./public
 0ms
-
-builder
-COPY frontend/index.html ./ cached
-0ms
-
-builder
-COPY frontend/public ./public cached
-0ms
-Dockerfile:11
 -------------------
-9 |     COPY frontend/public ./public
-10 |     COPY frontend/index.html ./
-11 | >>> COPY frontend/vite.config.js ./
-12 |
-13 |     RUN npm run build
--------------------
-ERROR: failed to build: failed to solve: failed to compute cache key: failed to calculate checksum of ref pvmsspwgy887a3ywz66nvmau6::cgk6azu1gewbtg7qajf0h2ujj: "/frontend/vite.config.js": not found
+11 |     COPY frontend/public ./public
+12 | >>> COPY frontend/index.html ./
 
 
 
