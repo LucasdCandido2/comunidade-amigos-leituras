@@ -48,6 +48,7 @@ WORKDIR /var/www
 
 # Copia do projeto raiz (contexto do Railway)
 COPY backend/composer.json backend/composer.lock ./
+COPY backend/artisan ./
 COPY backend/app ./app
 COPY backend/bootstrap ./bootstrap
 COPY backend/config ./config
@@ -63,7 +64,7 @@ RUN chown -R www-data:www-data /var/www/storage /var/www/bootstrap
 RUN chmod -R 775 /var/www/storage /var/www/bootstrap
 
 # Instala dependências Laravel
-RUN composer install --no-dev --optimize-autoloader --no-interaction
+RUN composer install --no-dev --optimize-autoloader --no-interaction --no-scripts
 
 # Limpa cache
 RUN php artisan config:clear || true
