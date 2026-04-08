@@ -2,7 +2,7 @@ FROM node:20-alpine AS builder
 
 WORKDIR /app
 
-COPY package*.json ./
+COPY frontend/package*.json ./
 RUN npm install
 
 COPY frontend/src ./src
@@ -22,3 +22,5 @@ RUN npm install -g serve
 
 EXPOSE 3000
 CMD ["serve", "dist", "-l", "3000"]
+
+# Railway will use this Dockerfile
