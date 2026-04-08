@@ -46,7 +46,7 @@ COPY --from=composer:2 /usr/bin/composer /usr/bin/composer
 
 WORKDIR /var/www
 
-# Copia arquivos do projeto (Dockerfile está em backend/, contexto é backend/)
+# Copia do contexto (pasta backend/) diretamente
 COPY composer.json composer.lock ./
 COPY app ./app
 COPY bootstrap ./bootstrap
@@ -56,7 +56,7 @@ COPY public ./public
 COPY routes ./routes
 COPY storage ./storage
 COPY tests ./tests
-COPY .env.example ./
+COPY .env .env
 
 # Cria pastas necessárias
 RUN mkdir -p /var/www/storage /var/www/bootstrap/cache
@@ -68,12 +68,8 @@ RUN chmod -R 775 /var/www/storage /var/www/bootstrap
 # Instala dependências Laravel
 RUN composer install --no-dev --optimize-autoloader --no-interaction
 
-# Gera chave da aplicação se não existir
-RUN php artisan key:generate --force || true
-
 # Limpa cache
-RUN php artisan config:cache || true
-RUN php artisan route:cache || true
+RUN php artisan config:clear || true
 
 # Alterna para usuário não-root
 USER www-data
