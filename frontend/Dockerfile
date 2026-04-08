@@ -5,7 +5,11 @@ WORKDIR /app
 COPY package*.json ./
 RUN npm install
 
-COPY . .
+COPY frontend/src ./src
+COPY frontend/public ./public
+COPY frontend/index.html ./
+COPY frontend/vite.config.js ./
+
 RUN npm run build
 
 FROM node:20-alpine
@@ -13,7 +17,6 @@ FROM node:20-alpine
 WORKDIR /app
 
 COPY --from=builder /app/dist ./dist
-COPY --from=builder /app/package.json ./
 
 RUN npm install -g serve
 

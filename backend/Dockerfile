@@ -38,10 +38,25 @@ RUN docker-php-ext-install -j$(nproc) \
     zip \
     intl
 
+# Instala extensão Redis
+RUN pecl install redis && docker-php-ext-enable redis
+
 # Instala Composer
 COPY --from=composer:2 /usr/bin/composer /usr/bin/composer
 
 WORKDIR /var/www
+
+# Copia arquivos do projeto (Dockerfile está em backend/, contexto é backend/)
+COPY composer.json composer.lock ./
+COPY app ./app
+COPY bootstrap ./bootstrap
+COPY config ./config
+COPY database ./database
+COPY public ./public
+COPY routes ./routes
+COPY storage ./storage
+COPY tests ./tests
+COPY .env.example ./
 
 # Cria pastas necessárias
 RUN mkdir -p /var/www/storage /var/www/bootstrap/cache
@@ -49,9 +64,6 @@ RUN mkdir -p /var/www/storage /var/www/bootstrap/cache
 # Ajusta permissões
 RUN chown -R www-data:www-data /var/www/storage /var/www/bootstrap
 RUN chmod -R 775 /var/www/storage /var/www/bootstrap
-
-# Copia código da aplicação
-COPY . .
 
 # Instala dependências Laravel
 RUN composer install --no-dev --optimize-autoloader --no-interaction
@@ -66,6 +78,6 @@ RUN php artisan route:cache || true
 # Alterna para usuário não-root
 USER www-data
 
-EXPOSE 9000
+EXPOSE 8000
 
-CMD ["php-fpm"]
+CMD ["php", "artisan", "serve", "--host=0.0.0.0", "--port=8000"]
