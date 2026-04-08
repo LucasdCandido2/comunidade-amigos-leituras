@@ -46,14 +46,14 @@ COPY --from=composer:2 /usr/bin/composer /usr/bin/composer
 
 WORKDIR /var/www
 
-# Copia do contexto (pasta backend/) diretamente
-COPY composer.json composer.lock ./
-COPY app ./app
-COPY bootstrap ./bootstrap
-COPY config ./config
-COPY database ./database
-COPY public ./public
-COPY routes ./routes
+# Copia do projeto raiz (contexto do Railway)
+COPY backend/composer.json backend/composer.lock ./
+COPY backend/app ./app
+COPY backend/bootstrap ./bootstrap
+COPY backend/config ./config
+COPY backend/database ./database
+COPY backend/public ./public
+COPY backend/routes ./routes
 
 # Cria pastas necessárias
 RUN mkdir -p /var/www/storage /var/www/bootstrap/cache
