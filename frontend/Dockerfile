@@ -22,5 +22,3 @@ RUN npm install -g serve
 
 EXPOSE 3000
 CMD ["serve", "dist", "-l", "3000"]
-
-# Railway will use this Dockerfile
