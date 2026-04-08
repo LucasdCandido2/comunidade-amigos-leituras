@@ -7,10 +7,7 @@ return [
 
     'allowed_methods' => ['*'],
 
-    'allowed_origins' => [
-        $frontendUrl,
-        'https://outstanding-luck-production-1bba.up.railway.app',
-    ],
+    'allowed_origins' => ['*'],
 
     'allowed_origins_patterns' => [],
 
