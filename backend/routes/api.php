@@ -21,6 +21,47 @@ Route::options('{any}', function () {
     return response('', 204);
 })->where('any', '.*');
 
+Route::middleware('bearer')->group(function () {
+    Route::get('/export-works', function () {
+        $sources = \App\Models\ExternalSource::all();
+        $works = \App\Models\Work::all();
+        
+        return response()->json([
+            'sources' => $sources,
+            'works' => $works,
+        ]);
+    });
+
+    Route::post('/import-works', function (\Illuminate\Http\Request $request) {
+        $data = $request->all();
+        
+        $importedSources = 0;
+        $importedWorks = 0;
+        
+        foreach ($data['sources'] ?? [] as $source) {
+            \App\Models\ExternalSource::updateOrCreate(
+                ['id' => $source['id']],
+                $source
+            );
+            $importedSources++;
+        }
+        
+        foreach ($data['works'] ?? [] as $work) {
+            \App\Models\Work::updateOrCreate(
+                ['external_id' => $work['external_id'], 'external_source_id' => $work['external_source_id']],
+                $work
+            );
+            $importedWorks++;
+        }
+        
+        return response()->json([
+            'message' => 'Import completed',
+            'sources' => $importedSources,
+            'works' => $importedWorks,
+        ]);
+    });
+});
+
 Route::post('/register', [AuthController::class, 'register']);
 Route::post('/login', [AuthController::class, 'login']);
 Route::post('/registration-request', [RegistrationRequestController::class, 'store']);
